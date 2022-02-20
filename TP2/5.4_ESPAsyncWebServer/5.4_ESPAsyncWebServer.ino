@@ -16,6 +16,7 @@
 #include "OneWire.h"
 #include "DallasTemperature.h"
 #include "SPIFFS.h"
+#include <HTTPClient.h>
 
 void setup_OTA(); // from ota.ino
 
@@ -43,11 +44,18 @@ AsyncWebServer server(80);
 
 // Thresholds
 short int Light_threshold = 250; // Less => night, more => day
+short int sbn = 19 ;   //seuil bas nuit
+short int shn = 20 ;   // seuil haut nuit
+short int sbj = 21 ;    // seuil bas jour
+short int shj = 22 ;    // seuil haut jour
 
 // Host for periodic data report
 String target_ip = "";
 int target_port = 1880;
 int target_sp = 0; // Remaining time before the ESP stops transmitting
+
+// Initialisation du timer
+int timer = 0;
 
 /*====== Some functions =====================*/
 
@@ -55,11 +63,46 @@ String processor(const String& var){
   /* Replaces "placeholder" in  html file with sensors values */
   /* accessors functions get_... are in sensors.ino file   */
   //Serial.println(var);
+  //int temperatureValue = atoi(get_temperature(TempSensor).c_str());
+  //Serial.println(temperatureValue);
   if(var == "TEMPERATURE"){
     return get_temperature(TempSensor);
   }
   else if(var == "LIGHT"){
     return get_light(LightPin);
+  }
+  else if(var == "UPTIME"){
+    return String(timer);
+  }
+ else if(var == "SSID"){
+    return WiFi.SSID();
+  }
+  else if(var == "MAC"){
+    return WiFi.macAddress();
+  }
+  else if(var == "IP"){
+    return WiFi.localIP().toString();
+  }
+  else if(var == "COOLER"){
+    return atoi(get_temperature(TempSensor).c_str()) >= 18? "true" : "false";
+  }
+  else if(var == "HEATER"){
+    return atoi(get_temperature(TempSensor).c_str()) < 18? "true" : "false";
+  }
+  else if(var == "LT"){
+    return String(Light_threshold);
+  }
+  else if(var == "SBJ"){
+    return String(sbj);
+  }
+  else if(var == "SHJ"){
+   return String(shj);
+  }
+  else if(var == "SBN"){
+    return String(sbn);
+  }
+  else if(var == "SHN"){
+    return String(shn);
   }
   return String();
 }
@@ -86,6 +129,12 @@ void setup_http_server() {
     request->send_P(200, "text/plain", get_light(LightPin).c_str());
   });
 
+  server.on("/uptime", HTTP_GET, [](AsyncWebServerRequest *request){
+    /* The most simple route => hope a response with light value */ 
+    request->send_P(200, "text/plain", String(timer));
+  });
+
+
   // This route allows users to change thresholds values through GET params
   server.on("/set", HTTP_GET, [](AsyncWebServerRequest *request){
     /* A route with a side effect : this get request has a param and should     
@@ -102,6 +151,9 @@ void setup_http_server() {
      *  of the reporting target host.
      */
      Serial.println("Receive Request for a ""target"" route !"); 
+     HTTPClient http;
+     String server = "http://192.168.179.243:1880";
+     WiFiClient client;
         if (request->hasArg("ip") &&
         request->hasArg("port") &&
         request->hasArg("sp")) {
@@ -109,6 +161,9 @@ void setup_http_server() {
             target_port = atoi(request->arg("port").c_str());
             target_sp = atoi(request->arg("sp").c_str());
         }
+        http.begin(client,server);
+        http.addHeader("Content-Type", "application/json");
+        http.POST("{\"api_key\":\"tPmAT5Ab3j7F9\",\"sensor\":\"BME280\",\"value1\":\"24.25\",\"value2\":\"49.54\",\"value3\":\"1005.14\"}");
         request->send(SPIFFS, "/statut.html", String(), false, processor);
     });
     
@@ -156,4 +211,5 @@ void loop(){
 
   
   delay(1000);
+  timer++;
 }
