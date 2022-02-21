@@ -53,18 +53,24 @@ short int shj = 22 ;    // seuil haut jour
 String target_ip = "";
 int target_port = 1880;
 int target_sp = 0; // Remaining time before the ESP stops transmitting
+int lastTime = 0;
 
 // Initialisation du timer
 int timer = 0;
+
+int tempValue = 0;
+
+bool sendingData = false;
+WiFiClient client;
+HTTPClient http;
+
 
 /*====== Some functions =====================*/
 
 String processor(const String& var){
   /* Replaces "placeholder" in  html file with sensors values */
   /* accessors functions get_... are in sensors.ino file   */
-  //Serial.println(var);
-  //int temperatureValue = atoi(get_temperature(TempSensor).c_str());
-  //Serial.println(temperatureValue);
+  //temperature = (get_temperature(TempSensor)).toInt();
   if(var == "TEMPERATURE"){
     return get_temperature(TempSensor);
   }
@@ -84,10 +90,18 @@ String processor(const String& var){
     return WiFi.localIP().toString();
   }
   else if(var == "COOLER"){
-    return atoi(get_temperature(TempSensor).c_str()) >= 18? "true" : "false";
+    if(tempValue >= 18){
+      return "true";
+    } else {
+      return "false";
+    }
   }
   else if(var == "HEATER"){
-    return atoi(get_temperature(TempSensor).c_str()) < 18? "true" : "false";
+       if(tempValue < 18){
+      return "true";
+    } else {
+      return "false";
+    }
   }
   else if(var == "LT"){
     return String(Light_threshold);
@@ -131,9 +145,8 @@ void setup_http_server() {
 
   server.on("/uptime", HTTP_GET, [](AsyncWebServerRequest *request){
     /* The most simple route => hope a response with light value */ 
-    request->send_P(200, "text/plain", String(timer));
+    request->send_P(200, "text/plain", String(timer).c_str());
   });
-
 
   // This route allows users to change thresholds values through GET params
   server.on("/set", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -151,21 +164,16 @@ void setup_http_server() {
      *  of the reporting target host.
      */
      Serial.println("Receive Request for a ""target"" route !"); 
-     HTTPClient http;
-     String server = "http://192.168.179.243:1880";
-     WiFiClient client;
         if (request->hasArg("ip") &&
         request->hasArg("port") &&
         request->hasArg("sp")) {
             target_ip = request->arg("ip");
             target_port = atoi(request->arg("port").c_str());
             target_sp = atoi(request->arg("sp").c_str());
+            sendingData = true;
+            request->send(sendDataToServer());
         }
-        http.begin(client,server);
-        http.addHeader("Content-Type", "application/json");
-        http.POST("{\"api_key\":\"tPmAT5Ab3j7F9\",\"sensor\":\"BME280\",\"value1\":\"24.25\",\"value2\":\"49.54\",\"value3\":\"1005.14\"}");
-        request->send(SPIFFS, "/statut.html", String(), false, processor);
-    });
+     });
     
   // If request doesn't match any route, returns 404.
   server.onNotFound([](AsyncWebServerRequest *request){
@@ -199,17 +207,27 @@ void setup(){
 
   setup_http_server();
 }
+
+int sendDataToServer(){
+     http.begin("http://"+target_ip+":"+target_port+"/");
+     http.addHeader("Content-Type", "application/json");
+     int httpResponseCode = http.POST("{\"api_key\":\"tPmAT5Ab3j7F9\",\"sensor\":\"BME280\",\"value1\":\"24.25\",\"value2\":\"49.54\",\"value3\":\"1005.14\"}");
+     http.end();
+     return httpResponseCode;
+ }
  
 void loop(){  
-  int tempValue;
-  
+  timer++;
   ArduinoOTA.handle();
-  
   tempValue = atoi(get_temperature(TempSensor).c_str());
+  if(target_sp == 0){
+    sendingData = false;
+  } else if(sendingData && (millis()- lastTime)> (target_sp*1000)){
+    sendDataToServer();
+    lastTime = millis();
+  }
 
   // Use this new temp for regulation updating ?
-
-  
   delay(1000);
-  timer++;
+
 }
