@@ -1,0 +1,865 @@
+[
+    {
+        "id": "7af7513c16d77866",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "669dc616cf585fe6",
+        "type": "mqtt in",
+        "z": "7af7513c16d77866",
+        "name": "",
+        "topic": "esp/sensors",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "f9ef7c6c1ed09f3f",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 250,
+        "y": 220,
+        "wires": [
+            [
+                "932a674d2c80adc6"
+            ]
+        ]
+    },
+    {
+        "id": "d825e57ea8fe1495",
+        "type": "mqtt in",
+        "z": "7af7513c16d77866",
+        "name": "",
+        "topic": "command/center",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "f9ef7c6c1ed09f3f",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 260,
+        "y": 480,
+        "wires": [
+            [
+                "3c461574f3a1ef82"
+            ]
+        ]
+    },
+    {
+        "id": "df348a6ebcdc5fbb",
+        "type": "inject",
+        "z": "7af7513c16d77866",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "1",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 250,
+        "y": 760,
+        "wires": [
+            [
+                "b79eecb7c37390ae"
+            ]
+        ]
+    },
+    {
+        "id": "b79eecb7c37390ae",
+        "type": "moment",
+        "z": "7af7513c16d77866",
+        "name": "",
+        "topic": "",
+        "input": "",
+        "inputType": "msg",
+        "inTz": "Europe/Paris",
+        "adjAmount": 0,
+        "adjType": "days",
+        "adjDir": "add",
+        "format": "DD.MM.YYYY HH:mm",
+        "locale": "fr-FR",
+        "output": "",
+        "outputType": "msg",
+        "outTz": "Europe/Paris",
+        "x": 520,
+        "y": 760,
+        "wires": [
+            [
+                "0a8f85906d8beae7"
+            ]
+        ]
+    },
+    {
+        "id": "0a8f85906d8beae7",
+        "type": "ui_text",
+        "z": "7af7513c16d77866",
+        "group": "85188c69bd52a78e",
+        "order": 2,
+        "width": 3,
+        "height": 1,
+        "name": "",
+        "label": "",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "className": "bold",
+        "x": 1010,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "b6f867741daf2401",
+        "type": "ui_template",
+        "z": "7af7513c16d77866",
+        "group": "",
+        "name": "",
+        "order": 7,
+        "width": 0,
+        "height": 0,
+        "format": "<style type=\"text/css\" media=\"all\">\n    .bold {\n        font-weight: bold;\n    }\n    \n    .nr-dashboard-button .md-button {\n        border-radius: 40px !important;\n        pointer-events: none !important;\n    }\n    .nr-dashboard-cardpanel > p {\n        text-align: center;\n    }\n    .nr-dashboard-text .value {\n        text-align: center;\n    }\n</style>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "global",
+        "className": "",
+        "x": 240,
+        "y": 580,
+        "wires": [
+            [
+                "0a8f85906d8beae7",
+                "25f6572cc91e0b38"
+            ]
+        ]
+    },
+    {
+        "id": "25f6572cc91e0b38",
+        "type": "ui_button",
+        "z": "7af7513c16d77866",
+        "name": "",
+        "group": "85188c69bd52a78e",
+        "order": 5,
+        "width": 3,
+        "height": 2,
+        "passthru": false,
+        "label": "Fire Alert",
+        "tooltip": "",
+        "color": "{{msg.payload.color}}",
+        "bgcolor": "{{msg.payload.background}}",
+        "className": "",
+        "icon": "",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 1020,
+        "y": 660,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "276534aca4cc99e3",
+        "type": "function",
+        "z": "7af7513c16d77866",
+        "name": "getAlertButtonColor()",
+        "func": "if(msg.payload.state == \"ONFIRE\"){\n    msg.payload = {color: \"white\", background: \"red\"};\n} else {\n    msg.payload = {color: \"white\", background: \"#097479\"};\n}\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 720,
+        "y": 580,
+        "wires": [
+            [
+                "25f6572cc91e0b38"
+            ]
+        ]
+    },
+    {
+        "id": "3c461574f3a1ef82",
+        "type": "json",
+        "z": "7af7513c16d77866",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 430,
+        "y": 380,
+        "wires": [
+            [
+                "276534aca4cc99e3",
+                "709da581cdbe4c2c",
+                "6afc529db2e032a9"
+            ]
+        ]
+    },
+    {
+        "id": "932a674d2c80adc6",
+        "type": "json",
+        "z": "7af7513c16d77866",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 430,
+        "y": 200,
+        "wires": [
+            [
+                "02b4dfb0cffe48b3",
+                "b39333799ff7c17f"
+            ]
+        ]
+    },
+    {
+        "id": "02b4dfb0cffe48b3",
+        "type": "function",
+        "z": "7af7513c16d77866",
+        "name": "getTemp()",
+        "func": "msg.topic = \"temperature\";\nmsg.payload = msg.payload.temperature;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 120,
+        "wires": [
+            [
+                "9ca9ee453cf7c98e",
+                "813c0a8a3d7bc90c"
+            ]
+        ]
+    },
+    {
+        "id": "b39333799ff7c17f",
+        "type": "function",
+        "z": "7af7513c16d77866",
+        "name": "getLight()",
+        "func": "msg.topic = \"light\";\nmsg.payload = msg.payload.light;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 220,
+        "wires": [
+            [
+                "52fa18c0baf23cc2",
+                "266b6ba5e997b90d"
+            ]
+        ]
+    },
+    {
+        "id": "9ca9ee453cf7c98e",
+        "type": "ui_chart",
+        "z": "7af7513c16d77866",
+        "name": "",
+        "group": "5495f91856ef71e0",
+        "order": 2,
+        "width": 6,
+        "height": 4,
+        "label": "",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "10",
+        "ymax": "30",
+        "removeOlder": "30",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 855,
+        "y": 80,
+        "wires": [
+            []
+        ],
+        "l": false
+    },
+    {
+        "id": "813c0a8a3d7bc90c",
+        "type": "ui_gauge",
+        "z": "7af7513c16d77866",
+        "name": "",
+        "group": "5495f91856ef71e0",
+        "order": 3,
+        "width": 6,
+        "height": 4,
+        "gtype": "gage",
+        "title": "",
+        "label": "°",
+        "format": "{{value}}",
+        "min": "10",
+        "max": "30",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "className": "",
+        "x": 855,
+        "y": 160,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "266b6ba5e997b90d",
+        "type": "ui_gauge",
+        "z": "7af7513c16d77866",
+        "name": "",
+        "group": "61b8671f054a0517",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "",
+        "label": "lumens",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "4000",
+        "colors": [
+            "#bdc1bd",
+            "#e6e600",
+            "#ffa629"
+        ],
+        "seg1": "1200",
+        "seg2": "2000",
+        "className": "",
+        "x": 855,
+        "y": 280,
+        "wires": [],
+        "l": false
+    },
+    {
+        "id": "52fa18c0baf23cc2",
+        "type": "ui_chart",
+        "z": "7af7513c16d77866",
+        "name": "",
+        "group": "61b8671f054a0517",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "label": "",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "3500",
+        "removeOlder": "30",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 855,
+        "y": 200,
+        "wires": [
+            []
+        ],
+        "l": false
+    },
+    {
+        "id": "fda5dc64035afbd7",
+        "type": "ui_text",
+        "z": "7af7513c16d77866",
+        "group": "85188c69bd52a78e",
+        "order": 8,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Intervention Pompier",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "className": "",
+        "x": 1060,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "709da581cdbe4c2c",
+        "type": "function",
+        "z": "7af7513c16d77866",
+        "name": "extractEmergencyStatus()",
+        "func": "var emergencystatus = msg.payload.emergencyStatus;\nif(emergencystatus == \"en route\"){\n    msg.payload = \"Un incendie s'est déclaré, les pompiers sont en route\";\n} else if(emergencystatus == \"sur place\"){\n    msg.payload = \"Les pompiers sont arrivés sur site\";\n} else {\n    msg.payload = \"L'incendie est maitrisé, les pompiers retournent en caserne\";\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 730,
+        "y": 460,
+        "wires": [
+            [
+                "fda5dc64035afbd7"
+            ]
+        ]
+    },
+    {
+        "id": "4ec68695dd3e6c66",
+        "type": "inject",
+        "z": "7af7513c16d77866",
+        "name": "Init Text ",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Aucune intervention",
+        "payloadType": "str",
+        "x": 770,
+        "y": 380,
+        "wires": [
+            [
+                "fda5dc64035afbd7"
+            ]
+        ]
+    },
+    {
+        "id": "f5d056a3769f5312",
+        "type": "ui_toast",
+        "z": "7af7513c16d77866",
+        "position": "dialog",
+        "displayTime": "3",
+        "highlight": "",
+        "sendall": true,
+        "outputs": 1,
+        "ok": "OK",
+        "cancel": "",
+        "raw": false,
+        "className": "",
+        "topic": "",
+        "name": "",
+        "x": 1050,
+        "y": 540,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "6afc529db2e032a9",
+        "type": "function",
+        "z": "7af7513c16d77866",
+        "name": "",
+        "func": "if(msg.payload.emergencyStatus == \"en route\"){\n    msg.payload = \"ATTENTION INCENDIE \"+msg.payload.location;\n    return msg;\n}\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 680,
+        "y": 520,
+        "wires": [
+            [
+                "f5d056a3769f5312"
+            ]
+        ]
+    },
+    {
+        "id": "656c57461a3dbb0b",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "9de5ee1eb841dc1b",
+        "order": 2,
+        "width": 31,
+        "height": 1
+    },
+    {
+        "id": "e7114b148d83cf12",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "9de5ee1eb841dc1b",
+        "order": 3,
+        "width": 35,
+        "height": 1
+    },
+    {
+        "id": "ddb245430075749d",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "9de5ee1eb841dc1b",
+        "order": 4,
+        "width": 3,
+        "height": 1
+    },
+    {
+        "id": "8fb3b3b7d83b5dce",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "9de5ee1eb841dc1b",
+        "order": 6,
+        "width": 25,
+        "height": 1
+    },
+    {
+        "id": "be64c4bb932a004b",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "9de5ee1eb841dc1b",
+        "order": 8,
+        "width": 3,
+        "height": 1
+    },
+    {
+        "id": "57a2efb9cf2588f3",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "9de5ee1eb841dc1b",
+        "order": 10,
+        "width": 24,
+        "height": 1
+    },
+    {
+        "id": "fcf35cd380d9a526",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "9de5ee1eb841dc1b",
+        "order": 11,
+        "width": 3,
+        "height": 1
+    },
+    {
+        "id": "080f73d0d8566b5a",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "9de5ee1eb841dc1b",
+        "order": 12,
+        "width": 24,
+        "height": 1
+    },
+    {
+        "id": "2365e15224518181",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "9de5ee1eb841dc1b",
+        "order": 13,
+        "width": 3,
+        "height": 1
+    },
+    {
+        "id": "84a1f3da775e3d41",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "9de5ee1eb841dc1b",
+        "order": 14,
+        "width": 24,
+        "height": 1
+    },
+    {
+        "id": "815e0057af058314",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "9de5ee1eb841dc1b",
+        "order": 15,
+        "width": 3,
+        "height": 1
+    },
+    {
+        "id": "6ff9212680b406df",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "9de5ee1eb841dc1b",
+        "order": 16,
+        "width": 24,
+        "height": 1
+    },
+    {
+        "id": "d0efa8f12ba8d697",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "9de5ee1eb841dc1b",
+        "order": 17,
+        "width": 3,
+        "height": 1
+    },
+    {
+        "id": "646dc6542e0c6f28",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "9de5ee1eb841dc1b",
+        "order": 18,
+        "width": 24,
+        "height": 1
+    },
+    {
+        "id": "78d3b3a57d5973bf",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "9de5ee1eb841dc1b",
+        "order": 19,
+        "width": 35,
+        "height": 1
+    },
+    {
+        "id": "f546e7495862bad8",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "9de5ee1eb841dc1b",
+        "order": 21,
+        "width": 29,
+        "height": 1
+    },
+    {
+        "id": "61c67e9734bc6586",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "9de5ee1eb841dc1b",
+        "order": 22,
+        "width": 29,
+        "height": 1
+    },
+    {
+        "id": "bb818de33dc761a6",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "9de5ee1eb841dc1b",
+        "order": 23,
+        "width": 29,
+        "height": 1
+    },
+    {
+        "id": "a6575d8388de7edb",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "9de5ee1eb841dc1b",
+        "order": 24,
+        "width": 29,
+        "height": 1
+    },
+    {
+        "id": "b4d63963396086a0",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "9de5ee1eb841dc1b",
+        "order": 25,
+        "width": 29,
+        "height": 1
+    },
+    {
+        "id": "be0e580c0646e130",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "85188c69bd52a78e",
+        "order": 1,
+        "width": 7,
+        "height": 1
+    },
+    {
+        "id": "2245af411d62b162",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "85188c69bd52a78e",
+        "order": 3,
+        "width": "4",
+        "height": "1"
+    },
+    {
+        "id": "9edf2a3e158a9d0e",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "85188c69bd52a78e",
+        "order": 9,
+        "width": "4",
+        "height": "3"
+    },
+    {
+        "id": "8c4194383f73cf0e",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "5495f91856ef71e0",
+        "order": 1,
+        "width": 6,
+        "height": 1
+    },
+    {
+        "id": "077a9eb83ce0ec9b",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "61b8671f054a0517",
+        "order": 1,
+        "width": 6,
+        "height": 1
+    },
+    {
+        "id": "c4578994a26722f2",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "85188c69bd52a78e",
+        "order": 4,
+        "width": "2",
+        "height": "1"
+    },
+    {
+        "id": "c25a35b8fc9644f3",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "85188c69bd52a78e",
+        "order": 6,
+        "width": "2",
+        "height": "1"
+    },
+    {
+        "id": "8de50c5dd3b78699",
+        "type": "ui_spacer",
+        "z": "7af7513c16d77866",
+        "name": "spacer",
+        "group": "85188c69bd52a78e",
+        "order": 7,
+        "width": "7",
+        "height": "2"
+    },
+    {
+        "id": "f9ef7c6c1ed09f3f",
+        "type": "mqtt-broker",
+        "name": "myBroker",
+        "broker": "192.168.1.39",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "sessionExpiry": ""
+    },
+    {
+        "id": "85188c69bd52a78e",
+        "type": "ui_group",
+        "name": "Default",
+        "tab": "7532174f5bd3a773",
+        "order": 1,
+        "disp": false,
+        "width": 7,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "5495f91856ef71e0",
+        "type": "ui_group",
+        "name": "Temperature",
+        "tab": "7532174f5bd3a773",
+        "order": 2,
+        "disp": true,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "61b8671f054a0517",
+        "type": "ui_group",
+        "name": "Light",
+        "tab": "7532174f5bd3a773",
+        "order": 3,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "7532174f5bd3a773",
+        "type": "ui_tab",
+        "name": "Centre de Commande ESP",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]

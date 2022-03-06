@@ -1,6 +1,7 @@
 # Let's talk MQTT in Python
 # first install : https://pypi.org/project/paho-mqtt/
 # Author : G.MENEZ
+from types import SimpleNamespace
 
 import paho.mqtt.client as mqtt
 import time
@@ -15,7 +16,8 @@ def on_message(client, userdata, message):
     print("with qos = {}".format(message.qos))
     print("with retain flag = {}".format(message.retain))
 
-    if message.topic == topicFireEmergency and message.payload.decode("utf-8") == "FIRE EMERGENCY":
+    obj = json.loads(str(message.payload.decode("utf-8")), object_hook=lambda d: SimpleNamespace(**d))
+    if message.topic == topicFireEmergency and obj.emergency == "FIRE EMERGENCY":
         state = "en intervention"
 
 

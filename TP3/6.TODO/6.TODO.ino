@@ -47,6 +47,9 @@ boolean isOnFire = false;
 String state = "NORMAL";
 String location = "5eme etage";
 boolean HelpOnTheWay = false;
+const char* emergencyStatus = "";
+StaticJsonDocument<256> jdoc;
+char jpayload[256];
 
 /*===== Arduino IDE paradigm : setup+loop =====*/
 void setup() {
@@ -105,27 +108,49 @@ void mqtt_pubcallback(char* topic,
     Serial.print("Message received from firefighters ");
     if (doc["status"] == "en route" && doc["state"] == "fire") {
       HelpOnTheWay = true;
-      client.publish(TOPIC_COMMAND_CENTER,"Incendie en cours, les pompiers sont en route");
+      emergencyStatus = doc["status"];
+      createJsonCommandCenter();
+      client.publish(TOPIC_COMMAND_CENTER,jpayload);
     } else if(doc["status"] == "sur place" && doc["state"] == "fire"){
-      client.publish(TOPIC_COMMAND_CENTER,"Incendie en cours, les pompiers sont sur site");
+      emergencyStatus = doc["status"];
+      createJsonCommandCenter();
+      client.publish(TOPIC_COMMAND_CENTER,jpayload);
     } else if(doc["status"] == "retour en caserne" && doc["state"] == "normal"){
-      client.publish(TOPIC_COMMAND_CENTER,"Incendie terminee, retour en caserne pour les pompiers");
+      emergencyStatus = doc["status"];
       state = "NORMAL";
+      createJsonCommandCenter();
+      client.publish(TOPIC_COMMAND_CENTER,jpayload);
       set_LED(LOW);
       HelpOnTheWay = false;
+      emergencyStatus = "";
     }
    }
 }
 
-void publishJson(char *topic){
-   StaticJsonDocument<256> jdoc;
+void createJsonSensors(){
+   jdoc.clear();
    jdoc["temperature"] = temperature;
    jdoc["light"] = light;
    jdoc["location"] = location;
    jdoc["ip"] = WiFi.localIP().toString();
-   char payload[256];
-   serializeJson(jdoc, payload);
-   client.publish(topic,payload);
+   serializeJson(jdoc, jpayload);
+}
+
+void createJsonEmergency(){
+   jdoc.clear();
+   jdoc["emergency"] = "FIRE EMERGENCY";
+   jdoc["location"] = location;
+   jdoc["ip"] = WiFi.localIP().toString();
+   serializeJson(jdoc, jpayload);
+}
+
+void createJsonCommandCenter(){
+   jdoc.clear();
+   jdoc["state"] = state;
+   jdoc["emergencyStatus"] = emergencyStatus;
+   jdoc["location"] = location;
+   jdoc["ip"] = WiFi.localIP().toString();
+   serializeJson(jdoc, jpayload);
 }
 
 // On utilise la lumière pour détecter un feu, car plus complexe de changer la température 
@@ -137,8 +162,8 @@ void detectFire(){
 
 // Si un feu est détecté ou si le centre de commande prévient d'un incendie, l'esp envoit ses coordonnées au pompiers
 void callForHelp(){
-    client.publish(TOPIC_FIRE_EMERGENCY, "FIRE EMERGENCY");
-    publishJson(TOPIC_FIRE_EMERGENCY);
+    createJsonEmergency();
+    client.publish(TOPIC_FIRE_EMERGENCY, jpayload);
 }
 
 /*============= SUBSCRIBE =====================*/
@@ -190,7 +215,8 @@ void loop() {
   //Serial.print("Published Light : "); Serial.println(light);
   Serial.println(state);
   // MQTT Publish
-  publishJson(TOPIC_SENSORS);
+  createJsonSensors();
+  client.publish(TOPIC_SENSORS,jpayload);
   detectFire();
   if(state == "ONFIRE"){
     if(!HelpOnTheWay){
