@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import paho.mqtt.client as mqtt
 import time
 import json
+import ssl
 
 
 # --------------------------------------------------
@@ -35,7 +36,11 @@ if __name__ == "__main__":
     broker_address = "192.168.1.39"
     """ broker_address="iot.eclipse.org" """
     print("Connecting to broker {}".format(broker_address))
-    client.connect(broker_address)  # connect to broker
+    # ===> TlS
+    client.tls_set("./ca.crt", certfile="./client.crt", keyfile="./client.key")
+    client.tls_insecure_set(True)
+    client.username_pw_set("pompier", password="pompier")
+    client.connect(broker_address, 8883, 60)  # connect to broker
     # -------------------------------------
     topicFireEmergency = "emergency/fire"
     topicFireFightersCommunication = "emergency/firefighters"
