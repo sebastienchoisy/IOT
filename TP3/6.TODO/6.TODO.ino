@@ -115,7 +115,6 @@ const int LightPin = A5;
 
 String temperature = "";
 String light = "";
-boolean isOnFire = false;
 String state = "NORMAL";
 String location = "5eme etage";
 boolean HelpOnTheWay = false;
@@ -288,7 +287,6 @@ void loop() {
   // Serial info
  // Serial.print("Published Temperature : "); Serial.println(temperature);
   //Serial.print("Published Light : "); Serial.println(light);
-  Serial.println(state);
   // MQTT Publish
   createJsonSensors();
   client.publish(TOPIC_SENSORS,jpayload);
