@@ -13,6 +13,7 @@
 // Wifi (TLS) https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFiClientSecure
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
+#include "ArduinoJson.h"
 #include "classic_setup.h"
 // MQTT https://pubsubclient.knolleary.net/
 #include <PubSubClient.h>
@@ -49,9 +50,8 @@ char *mqtt_passwd = NULL;
 #endif
 
 //==== MQTT TOPICS ==============
-#define TOPIC_TEMP "sensors/temp"
-#define TOPIC_LED "sensors/led"
-#define TOPIC_LIGHT "sensors/light"
+#define TOPIC_TEMP "IOTSHAN"
+
 
 
 //==== ESP is MQTT Client =======
@@ -63,36 +63,47 @@ PubSubClient client(espClient);
 
 /*============== MQTT CALLBACK ===================*/
 
-void mqtt_pubcallback(char* topic, byte* message, unsigned int length) {
-  /* 
-   *  Callback if a message is published on this topic.
-   */
-  
-  // Byte list to String ... plus facile a traiter ensuite !
-  // Mais sans doute pas optimal en performance => heap ?
-  String messageTemp ;
-  for(int i = 0 ; i < length ; i++) {
-    messageTemp += (char) message[i];
-  }
-  
-  Serial.print("Message : ");
-  Serial.println(messageTemp);
-  Serial.print("arrived on topic : ");
-  Serial.println(topic) ;
- 
-  // Analyse du message et Action 
-  if(String (topic) == TOPIC_LED) {
-     // Par exemple : Changes the LED output state according to the message   
-    Serial.print("Action : Changing output to ");
-    if(messageTemp == "on") {
-      Serial.println("on");
-      set_pin(LEDpin,HIGH);
-     
-    } else if (messageTemp == "off") {
-      Serial.println("off");
-      set_pin(LEDpin,LOW);
-    }
-  }
+//void mqtt_pubcallback(char* topic, byte* message, unsigned int length) {
+//  /* 
+//   *  Callback if a message is published on this topic.
+//   */
+//  
+//  // Byte list to String ... plus facile a traiter ensuite !
+//  // Mais sans doute pas optimal en performance => heap ?
+//  String messageTemp ;
+//  for(int i = 0 ; i < length ; i++) {
+//    messageTemp += (char) message[i];
+//  }
+//  
+//  Serial.print("Message : ");
+//  Serial.println(messageTemp);
+//  Serial.print("arrived on topic : ");
+//  Serial.println(topic) ;
+// 
+//  // Analyse du message et Action 
+//  if(String (topic) == TOPIC_LED) {
+//     // Par exemple : Changes the LED output state according to the message   
+//    Serial.print("Action : Changing output to ");
+//    if(messageTemp == "on") {
+//      Serial.println("on");
+//      set_pin(LEDpin,HIGH);
+//     
+//    } else if (messageTemp == "off") {
+//      Serial.println("off");
+//      set_pin(LEDpin,LOW);
+//    }
+//  }
+//}
+StaticJsonDocument<256> jdoc;
+char jpayload[256];
+
+void createJsonTemp(){
+  jdoc["mandatory"]["temperature"]= get_temperature();
+  jdoc["mandatory"]["localisation"]["longitude"]= 2.3522;
+  jdoc["mandatory"]["localisation"]["latitude"]= 48.8566;
+  jdoc["mandatory"]["identification"] = whoami;
+  jdoc["optional"]["light"] = get_light();
+  serializeJson(jdoc, jpayload);
 }
 
 /*============= CONNECT and SUBSCRIBE =====================*/
@@ -139,7 +150,7 @@ void setup_mqtt_server() {
   // set server of our client
   client.setServer(MQTT_SERVER.c_str(), MQTT_PORT);
   // set callback when publishes arrive for the subscribed topic
-  client.setCallback(mqtt_pubcallback);
+  // client.setCallback(mqtt_pubcallback);
 }
 /*============= ACCESSEURS ====================*/
 
@@ -194,12 +205,12 @@ void setup () {
 
 void loop () {
   static uint32_t tick = 0;
-  char data[80];
-  String payload; // Payload : "JSON ready" 
+//  char data[80];
+//  String payload; // Payload : "JSON ready" 
   int32_t period = 6 * 1000l; // Publication period
 
   /*--- subscribe to TOPIC_LED  */
-  mqtt_subscribe((char *)(TOPIC_LED));
+//  mqtt_subscribe((char *)(TOPIC_LED));
 
   if ( millis() - tick < period)
   {
@@ -210,26 +221,30 @@ void loop () {
   tick = millis();
 
   /* Publish Temperature periodically */
-  payload = "{\"who\": \"";
+  /*payload = "{\"who\": \"";
   payload += whoami;   
   payload += "\", \"value\": " ;
   payload += get_temperature(); 
   payload += "}";
   payload.toCharArray(data, (payload.length() + 1)); // Convert String payload to a char array
 
-  Serial.println(data);
-  client.publish(TOPIC_TEMP, data);  // publish it 
+  Serial.println(data);*/
+  createJsonTemp();
+  client.publish(TOPIC_TEMP, jpayload);
+  Serial.println(jpayload);// publish it 
 
   /* char tempString[8];
      dtostrf(temperature, 1, 2, tempString);
      client.publish(TOPIC_TEMP, tempString); */
   
   /* Publish Light periodically */
-  payload = "{\"who\": \"" + whoami + "\", \"value\": " + get_light() + "}";
+  /*payload = "{\"who\": \"" + whoami + "\", \"value\": " + get_light() + "}";
   payload.toCharArray(data, (payload.length() + 1));
 
-  Serial.println(data);
-  client.publish(TOPIC_LIGHT, data);
+  Serial.println(data);*/
+//  createJsonState("light");
+//  client.publish(TOPIC_LIGHT, jpayload);
+//  Serial.println(jpayload);
   
 END :  
   // Process MQTT ... obligatoire une fois par loop()

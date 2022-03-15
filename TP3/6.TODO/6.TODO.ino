@@ -1,8 +1,11 @@
+#include <SPIFFS.h>
+
 /*********
  Based on Rui Santos work :
  https://randomnerdtutorials.com/esp32-mqtt-publish-subscribe-arduino-ide/
  Modified by GM
 *********/
+#include <SPIFFS.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <Wire.h>
@@ -12,6 +15,8 @@
 #include "DallasTemperature.h"
 #include "sensors.h"
 #include "WiFiClientSecure.h"
+
+
 
 const char* CA_cert = \
 "-----BEGIN CERTIFICATE-----\n" \
@@ -122,6 +127,7 @@ const char* emergencyStatus = "";
 StaticJsonDocument<256> jdoc;
 char jpayload[256];
 
+
 /*===== Arduino IDE paradigm : setup+loop =====*/
 void setup() {
   Serial.begin(9600);
@@ -138,9 +144,19 @@ void setup() {
   tempSensor.begin();
 
   // set server of our client
-  espClient.setCACert(CA_cert);
-  espClient.setCertificate(ESP_CA_cert);
-  espClient.setPrivateKey(ESP_RSA_key);
+  const char* espcrt = readFileFromSPIFFS("/esp.pem").c_str();
+  const char* espkey = readFileFromSPIFFS("/esp.key").c_str();
+    if (!SPIFFS.begin(true)) {
+    Serial.println("An Error has occurred while mounting SPIFFS");
+    return;
+  }
+
+   const char* cacrt= readFileFromSPIFFS("/ca.pem").c_str();
+   Serial.println(cacrt);
+  
+  espClient.setCACert(cacrt);
+  espClient.setCertificate(espcrt);
+  espClient.setPrivateKey(espkey);
   client.setServer(mqtt_server, 8883);
   // set callback when publishes arrive for the subscribed topic
   client.setCallback(mqtt_pubcallback); 

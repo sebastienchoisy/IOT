@@ -33,10 +33,12 @@ async function listDatabases(client){
 // disconnect from our cluster.
 async function v0(){
     const mongoName = "lucioles"                   //Nom de la base
-    const mongoUri = 'mongodb://localhost:27017/'; //URL de connection		
-    //const uri = 'mongodb://10.9.128.189:27017/'; //URL de connection		
-    //const uri = 'mongodb+srv://menez:mettrelevotre@cluster0-x0zyf.mongodb.net/test?retryWrites=true&w=majority';
-    
+    //const mongoUri = 'mongodb://localhost:27017/'; //URL de connection		
+    //const mongoUri = 'mongodb://10.9.128.189:27017/'; //URL de connection
+    //const mongoUri = 'mongodb+srv://menez:pass...l@cluster0.x0zyf.mongodb.net/lucioles?retryWrites=true&w=majority';
+    var mongoUri = process.env.MONGOLAB_URI;
+
+
     //Now that we have our URI, we can create an instance of MongoClient.
     const mg_client = new MongoClient(mongoUri,
 				      {useNewUrlParser:true, useUnifiedTopology:true});
@@ -74,7 +76,8 @@ async function v0(){
 	// Connexion au broker MQTT distant
 	//
 	//const mqtt_url = 'http://192.168.1.11:1883'
-	const mqtt_url = 'http://broker.hivemq.com'
+	//const mqtt_url = 'http://broker.hivemq.com'
+	const mqtt_url = 'http://test.mosquitto.org:1883'
 	var client_mqtt = mqtt.connect(mqtt_url);
 	
 	//===============================================
@@ -176,7 +179,14 @@ const app = express();
 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
+
+//This lets you serve static files (such as HTML, CSS and JavaScript)
+//from the directory you specify. In this case, the files will be
+//served from a folder called public : 
+//app.use(express.static(path.join(__dirname, 'public')));
+
 app.use(express.static(path.join(__dirname, '/')));
+
 app.use(function(request, response, next) { //Pour eviter les problemes de CORS/REST
     response.header("Access-Control-Allow-Origin", "*");
     response.header("Access-Control-Allow-Headers", "*");
@@ -231,8 +241,9 @@ app.get('/esp/:what', function (req, res) {
 //================================================================
 //==== Demarrage du serveur Web  =======================
 //================================================================
-// L'application est accessible sur le port 3000
+// L'application est accessible sur le port 3000 mais pas que !!!
 
-app.listen(3000, () => {
-    console.log('Server listening on port 3000');
+// cf https://stackoverflow.com/questions/4840879/nodejs-how-to-get-the-servers-port
+var listener = app.listen(process.env.PORT || 3000, function(){
+    console.log('Express Listening on port ' + listener.address().port); //Listening on port 8888
 });
