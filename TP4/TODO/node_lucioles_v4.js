@@ -1,5 +1,5 @@
 // Importation des modules
-var path = require('path');
+const path = require('path');
 
 // var, const, let :
 // https://medium.com/@vincent.bocquet/var-let-const-en-js-quelles-diff%C3%A9rences-b0f14caa2049
@@ -9,7 +9,7 @@ const mqtt = require('mqtt')
 // Topics MQTT
 //const TOPIC_LIGHT = 'IOTSHAN/light'
 const TOPIC_TEMP  = 'IOTSHAN/temp'
-const TOPIC_AUTH = 'IOTSHAN/auth'
+//const TOPIC_AUTH = 'IOTSHAN/auth'
 
 
 //---  The MongoDB module exports MongoClient, and that's what
@@ -23,11 +23,11 @@ const {MongoClient} = require('mongodb');
 // This function will retrieve a list of databases in our cluster and
 // print the results in the console.
 async function listDatabases(client){
-    databasesList = await client.db().admin().listDatabases();
+	let databasesList = await client.db().admin().listDatabases();
     
     console.log("Databases in Mongo Cluster : \n");
     databasesList.databases.forEach(db => console.log(` - ${db.name}`));
-};
+}
 
 //----------------------------------------------------------------
 // asynchronous function named main() where we will connect to our
@@ -53,7 +53,7 @@ async function v0(){
 
 	//===============================================    
 	// Get a connection to the DB "lucioles" or create
-	dbo = mg_client.db(mongoName);
+		let dbo = mg_client.db(mongoName);
 
 	// Remove "old collections : temp and light
 	dbo.listCollections({name: "temp"})
@@ -75,24 +75,21 @@ async function v0(){
 	//===============================================
 	// Connexion au broker MQTT distant
 	//
-	//const mqtt_url = 'http://192.168.1.11:1883'
-	//const mqtt_url = 'http://broker.hivemq.com'
-	const mqtt_url = 'http://test.mosquitto.org:1883'
-	var client_mqtt = mqtt.connect(mqtt_url);
-	
-	//===============================================
+	const mqtt_url = 'http://test.mosquitto.org:1883';
+	const client_mqtt = mqtt.connect(mqtt_url);
+
+		//===============================================
 	// Des la connexion, le serveur NodeJS s'abonne aux topics MQTT 
 	//
 	client_mqtt.on('connect', function () {
-	    client_mqtt.subscribe(TOPIC_LIGHT, function (err) {
-		if (!err) {
-		    //client_mqtt.publish(TOPIC_TEST, 'Hello mqtt')
-		    console.log('Node Server has subscribed to ', TOPIC_LIGHT);
-		}
-	    })
+	    // client_mqtt.subscribe(TOPIC_LIGHT, function (err) {
+		// if (!err) {
+		//     //client_mqtt.publish(TOPIC_TEST, 'Hello mqtt')
+		//     console.log('Node Server has subscribed to ', TOPIC_LIGHT);
+		// }
+	    // })
 	    client_mqtt.subscribe(TOPIC_TEMP, function (err) {
 		if (!err) {
-		    //client_mqtt.publish(TOPIC_TEMP, 'Hello mqtt')
 		    console.log('Node Server has subscribed to ', TOPIC_TEMP);
 		}
 	    })
@@ -108,9 +105,13 @@ async function v0(){
 	    console.log("Msg payload : ", message.toString());
 
 	    // Parsing du message suppos� recu au format JSON
-	    message = JSON.parse(message);
-	    // wh = message.who
-	    val = message.value
+	    message = JSON.parse(message.toString());
+
+
+		let temp = message.mandatory.temperature;
+		let localisation = message.mandatory.localisation;
+		let wh = message.mandatory.identification;
+
 
 	    // Debug : Gerer une liste de who pour savoir qui utilise le node server	
 	    // let wholist = []
@@ -125,12 +126,14 @@ async function v0(){
 	    // parsing qui sera realise par hightcharts dans l'UI
 	    // cf https://www.w3schools.com/jsref/tryit.asp?filename=tryjsref_tolocalestring_date_all
 	    // vs https://jsfiddle.net/BlackLabel/tgahn7yv
-	    // var frTime = new Date().toLocaleString("fr-FR", {timeZone: "Europe/Paris"});
-	    var frTime = new Date().toLocaleString("sv-SE", {timeZone: "Europe/Paris"});
-	    var new_entry = { date: frTime, // timestamp the value 
-			      // who: wh,      // identify ESP who provide
-			      value: val    // this value
-			    };
+	    var frTime = new Date().toLocaleString("fr-FR", {timeZone: "Europe/Paris"});
+	    //var frTime = new Date().toLocaleString("sv-SE", {timeZone: "Europe/Paris"});
+	    var new_entry =
+			{ date: frTime,
+			identification: wh,      // identify ESP who provide
+			value: temp,
+			localisation: localisation
+			};
 	    
 	    // On recupere le nom basique du topic du message
 	    var key = path.parse(topic.toString()).base;
