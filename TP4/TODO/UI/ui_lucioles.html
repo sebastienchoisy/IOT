@@ -38,13 +38,28 @@
           </div>
         </div>
     </div>
-    <div id="logs_container"></div>
-    <div id="documentation_container"></div>
+    <div id="documentation_container">
+      <h1>Documentation</h1>
+      <h3>Inscription</h3>
+      <span>Pour envoyer vos données à l'application avec votre ESP, il faut tout d'abord s'inscrire sur le topic <b>iot/M1Miage2022/inscription</b> présent sur le broker
+        <b>test.mosquitto.org</b> en envoyant une requête Json sous cette forme :<br></span>
+      <img src="assets/inscriptionJson.JPG" alt="inscription-json" width="400">
+
+      <h3> Envoie de données</h3>
+      <span> Une fois, l'inscription réalisée, vous pouvez envoyer votre température à l'application en utilisant cette fois, le topic <b>iot/M1Miage2022</b> également
+        présent sur le broker <b>test.mosquitto.org</b> en les envoyant sous un Json de cette forme:
+      </span>
+      <img src="assets/tempJson.jpg" alt="temp-json" width="605" height="283">
+
+      <h3> Logs</h3>
+      <span> En cas de problèmes pour s'inscrire ou envoyer des données, il est possible de consulter les logs dans la partie prévue à cet effet.</span>
+    </div>
+      <div id="logs_container"></div>
     </div>
     <br>
-    <div id="container1" style="max-width: 1000px; height: 350px; margin: 0 auto"></div>
-    <div id="container2" style="max-width: 1000px; height: 350px; margin: 0 auto"></div>    
-    <div id="mydiv"></div>
+<!--    <div id="container1" style="max-width: 1000px; height: 350px; margin: 0 auto"></div>-->
+<!--    <div id="container2" style="max-width: 1000px; height: 350px; margin: 0 auto"></div>    -->
+<!--    <div id="mydiv"></div>-->
     <script src="../JS/map.js"></script>
   </body> 
 </html>

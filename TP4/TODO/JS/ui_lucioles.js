@@ -116,7 +116,6 @@ function init() {
 //             let listeData = [];
 //             resultat.forEach(function (element) {
 // 		listeData.push([Date.parse(element.date),element.value]);
-// 		//listeData.push([Date.now(),element.value]);
 //             });
 //             serie.setData(listeData); //serie.redraw();
 //         },

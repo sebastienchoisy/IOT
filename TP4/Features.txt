@@ -1,0 +1,4 @@
+Map à gauche
+Info sur le point à droite quand clique sur un point ( NOM/MAC, ville, coordonnées, courbe temperature => mise à jour en temps réel)
+Guide de connexion en bas à gauche 
+logs de connexion en bas à droite ( "truc s'est connecté","true n'a pas pu se connecter car mauvais Json","etc").

@@ -14,12 +14,14 @@ class NavListeners {
         this.mapContainer = document.getElementById("map_container");
         this.docContainer = document.getElementById("documentation_container");
         this.logsContainer = document.getElementById("logs_container");
+        this.mapButton.setAttribute('disabled','disabled');
+        this.docContainer.classList.add("hidden");
+        this.logsContainer.classList.add("hidden");
     }
 
     // Init for map button
     initMapButtonListener(){
         this.mapButton.addEventListener("click", ()=> {
-            this.mapButton.setAttribute('disabled','disabled');
             this.docButton.removeAttribute('disabled');
             this.logsButton.removeAttribute('disabled');
             this.mapContainer.classList.remove("hidden");
