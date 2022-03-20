@@ -1,0 +1,67 @@
+#header {
+    width: 700px;
+    font-family: 'Patrick Hand SC';
+    font-size: 80px;
+    display: flex;
+    justify-content: flex-start;
+    flex-direction: row;
+    color: black;
+    margin: auto;
+}
+#header img {
+    margin-right: 2%;
+}
+#navigation {
+    width: 700px;
+    margin: auto;
+    display: flex;
+    flex-direction: row;
+}
+#navigation button {
+    margin: 10px 4px 10px 4px;
+}
+
+.n-button {
+    box-shadow:inset 0px 1px 0px 0px #ffffff;
+    background-color:#f9f9f9;
+    border-radius:6px;
+    border:1px solid #dcdcdc;
+    display:inline-block;
+    cursor:pointer;
+    color:#666666;
+    font-family:'Patrick Hand SC';
+    font-size:15px;
+    font-weight:bold;
+    padding:5px 24px;
+    text-decoration:none;
+    text-shadow:0px 1px 0px #ffffff;
+}
+.n-button:hover:enabled {
+    background-color: #ffffff;
+}
+.n-button:disabled{
+    color: #cbcbcb;
+    pointer-events: none;
+}
+
+#container {
+    width: 700px;
+    margin: auto;
+}
+#map_container {
+    display: flex;
+    flex-direction: column;
+}
+#map,#marker_info {
+    width: 700px;
+    height: 450px;
+}
+#map {
+    margin-bottom: 4%;
+    border-radius: 2%;
+    margin-top: 10px;
+}
+
+.hidden {
+    display: none !important;
+}
