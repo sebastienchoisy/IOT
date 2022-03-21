@@ -3,6 +3,27 @@ const path = require('path');
 
 // var, const, let :
 // https://medium.com/@vincent.bocquet/var-let-const-en-js-quelles-diff%C3%A9rences-b0f14caa2049
+//====================================
+// Utilisation du framework express
+// Notamment g�r�r les routes
+const express = require('express');
+// et pour permettre de parcourir les body des requetes
+const bodyParser = require('body-parser');
+
+const app = express();
+
+app.use(bodyParser.urlencoded({ extended: true }))
+app.use(bodyParser.json())
+app.use(express.static(__dirname+'/public'));
+app.use(function(request, response, next) { //Pour eviter les problemes de CORS/REST
+	response.header("Access-Control-Allow-Origin", "*");
+	response.header("Access-Control-Allow-Headers", "*");
+	response.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE");
+	next();
+});
+app.listen(3000, () => {
+	console.log('Server listening on port 3000');
+});
 
 //--- MQTT module
 const mqtt = require('mqtt')
@@ -64,11 +85,11 @@ async function v0(){
 		}
 	    });
 
-	dbo.listCollections({name: "light"})
+	dbo.listCollections({name: "logs"})
 	    .next(function(err, collinfo) {
 		if (collinfo) { // The collection exists
 		    //console.log('Collection temp already exists');
-		    dbo.collection("light").drop() 
+		    dbo.collection("logs").drop()
 		}
 	    });
 
@@ -82,12 +103,7 @@ async function v0(){
 	// Des la connexion, le serveur NodeJS s'abonne aux topics MQTT 
 	//
 	client_mqtt.on('connect', function () {
-	    // client_mqtt.subscribe(TOPIC_LIGHT, function (err) {
-		// if (!err) {
-		//     //client_mqtt.publish(TOPIC_TEST, 'Hello mqtt')
-		//     console.log('Node Server has subscribed to ', TOPIC_LIGHT);
-		// }
-	    // })
+
 	    client_mqtt.subscribe(TOPIC_TEMP, function (err) {
 		if (!err) {
 		    console.log('Node Server has subscribed to ', TOPIC_TEMP);
@@ -103,55 +119,122 @@ async function v0(){
 	client_mqtt.on('message', function (topic, message) {
 	    console.log("\nMQTT msg on topic : ", topic.toString());
 	    console.log("Msg payload : ", message.toString());
-
+		let frTime = new Date().toLocaleString("fr-FR", {timeZone: "Europe/Paris"});
 	    // Parsing du message suppos� recu au format JSON
 	    message = JSON.parse(message.toString());
 
+		// Vérification du Json, si erreur on l'envoie dans la collection logs
+		if(!("info" in message && "ident" in message.info && "status" in message && "temperature" in message.status)){
+			let new_error = {};
+			if("info" in message && "ident" in message.info){
+				new_error =
+					{ date: frTime,
+						msg: "Mauvais JSON: "+message.info.ident+ " => Erreur dans le JSON",
+					};
+			} else {
+				new_error =
+					{ date: frTime,
+						msg: "Mauvais JSON: Erreur dans le JSON ( aucune identification reçue)",
+					};
+			}
+			dbo.collection("logs").insertOne(new_error, function(err, res) {
+				if (err) throw err;
+			});
+		} else {
+			let temp = message.status.temperature;
+			let localisation = message.info.loc;
+			let wh = message.info.ident;
 
-		let temp = message.mandatory.temperature;
-		let localisation = message.mandatory.localisation;
-		let wh = message.mandatory.identification;
+			// Debug : Gerer une liste de who pour savoir qui utilise le node server
+			// let wholist = []
+			// var index = wholist.findIndex(x => x.who==wh)
+			// if (index === -1){
+			// wholist.push({who:wh});
+			// }
+			// console.log("wholist using the node server :", wholist);
+
+			// Mise en forme de la donnee � stocker => dictionnaire
+			// Le format de la date est iomportant => compatible avec le
+			// parsing qui sera realise par hightcharts dans l'UI
+			// cf https://www.w3schools.com/jsref/tryit.asp?filename=tryjsref_tolocalestring_date_all
+			// vs https://jsfiddle.net/BlackLabel/tgahn7yv
+
+			//var frTime = new Date().toLocaleString("sv-SE", {timeZone: "Europe/Paris"});
+			let new_entry =
+				{ date: frTime,
+					identification: wh,      // identify ESP who provide
+					value: temp,
+					localisation: localisation
+				};
+
+			dbo.collection("temp").insertOne(new_entry, function(err, res) {
+				if (err) throw err;
+				console.log("\nItem : ", new_entry,
+					"\ninserted in db in collection : temp");
+			});
+		}
+	})
+
+		//================================================================
+// Answering GET request on this node ... probably from navigator.
+// => REQUETES HTTP reconnues par le Node
+//================================================================
+
+// Route / => Le node renvoie la page HTML affichant les charts
+		app.get('/', function (req, res) {
+			res.sendFile(__dirname+'/public/ui_lucioles.html');
+		});
 
 
-	    // Debug : Gerer une liste de who pour savoir qui utilise le node server	
-	    // let wholist = []
-	    // var index = wholist.findIndex(x => x.who==wh)
-	    // if (index === -1){
-		// wholist.push({who:wh});
-	    // }
-	    // console.log("wholist using the node server :", wholist);
+// The request contains the name of the targeted ESP !
+//     /esp/temp?who=80%3A7D%3A3A%3AFD%3AC9%3A44
+// /esp/:what
+// Exemple d'utilisation de routes dynamiques
+//    => meme fonction pour /esp/temp et /esp/light
+		app.get('/esp/temp', function (req, res) {
+			// cf https://stackabuse.com/get-query-strings-and-parameters-in-express-js/
+			console.log(req.originalUrl);
 
-	    // Mise en forme de la donnee � stocker => dictionnaire
-	    // Le format de la date est iomportant => compatible avec le
-	    // parsing qui sera realise par hightcharts dans l'UI
-	    // cf https://www.w3schools.com/jsref/tryit.asp?filename=tryjsref_tolocalestring_date_all
-	    // vs https://jsfiddle.net/BlackLabel/tgahn7yv
-	    var frTime = new Date().toLocaleString("fr-FR", {timeZone: "Europe/Paris"});
-	    //var frTime = new Date().toLocaleString("sv-SE", {timeZone: "Europe/Paris"});
-	    var new_entry =
-			{ date: frTime,
-			identification: wh,      // identify ESP who provide
-			value: temp,
-			localisation: localisation
-			};
-	    
-	    // On recupere le nom basique du topic du message
-	    var key = path.parse(topic.toString()).base;
-	    // Stocker le dictionnaire qui vient d'etre cr�� dans la BD
-	    // en utilisant le nom du topic comme key de collection
-	    dbo.collection(key).insertOne(new_entry, function(err, res) {
-		if (err) throw err;
-		console.log("\nItem : ", new_entry, 
-		"\ninserted in db in collection :", key);
-	    });
+			wh = req.query.who // get the "who" param from GET request
+			// => gives the Id of the ESP we look for in the db
+			wa = req.params.what // get the "what" from the GET request : temp or light ?
 
-	    // Debug : voir les collections de la DB 
-	    //dbo.listCollections().toArray(function(err, collInfos) {
-		// collInfos is an array of collection info objects
-		// that look like: { name: 'test', options: {} }
-	    //	console.log("List of collections currently in DB: ", collInfos); 
-	    //});
-	}) // end of 'message' callback installation
+			console.log("\n--------------------------------");
+			console.log("A client/navigator ", req.ip);
+			console.log("sending URL ",  req.originalUrl);
+			console.log("wants to GET ", wa);
+			console.log("values from object ", wh);
+
+			// R�cup�ration des nb derniers samples stock�s dans
+			// la collection associ�e a ce topic (wa) et a cet ESP (wh)
+			const nb = 200;
+			key = wa
+			//dbo.collection(key).find({who:wh}).toArray(function(err,result) {
+			dbo.collection(key).find({identification:wh}).sort({_id:-1}).limit(nb).toArray(function(err, result) {
+				if (err) throw err;
+				console.log('get on ', key);
+				console.log(result);
+				res.json(result.reverse()); // This is the response.
+				console.log('end find');
+			});
+			console.log('end app.get');
+		});
+
+		app.get('/esp/list', function (req, res) {
+
+			//dbo.collection(key).find({who:wh}).toArray(function(err,result) {
+			dbo.collection("temp").distinct("identification").then((list)=> res.send(list));
+
+		});
+
+		app.get('/esp/logs', function (req, res) {
+
+			//dbo.collection(key).find({who:wh}).toArray(function(err,result) {
+			dbo.collection("logs").find().toArray(function(err, result) {
+				if (err) throw err;
+				res.json(result); // This is the response.
+			});
+		});
 
 	//================================================================
 	// Fermeture de la connexion avec la DB lorsque le NodeJS se termine.
@@ -170,75 +253,3 @@ async function v0(){
 //==== Demarrage BD et MQTT =======================
 //================================================================
 v0().catch(console.error);
-
-//====================================
-// Utilisation du framework express
-// Notamment g�r�r les routes 
-const express = require('express');
-// et pour permettre de parcourir les body des requetes
-const bodyParser = require('body-parser');
-
-const app = express();
-
-app.use(bodyParser.urlencoded({ extended: true }))
-app.use(bodyParser.json())
-app.use(express.static(path.join(__dirname, '/')));
-app.use(function(request, response, next) { //Pour eviter les problemes de CORS/REST
-    response.header("Access-Control-Allow-Origin", "*");
-    response.header("Access-Control-Allow-Headers", "*");
-    response.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE");
-    next();
-});
-
-//================================================================
-// Answering GET request on this node ... probably from navigator.
-// => REQUETES HTTP reconnues par le Node
-//================================================================
-    
-// Route / => Le node renvoie la page HTML affichant les charts
-app.get('/', function (req, res) {
-    res.sendFile(path.join(__dirname + '/ui_lucioles.html'));
-});
-
-
-// The request contains the name of the targeted ESP !
-//     /esp/temp?who=80%3A7D%3A3A%3AFD%3AC9%3A44
-// Exemple d'utilisation de routes dynamiques
-//    => meme fonction pour /esp/temp et /esp/light
-app.get('/esp/:what', function (req, res) {
-    // cf https://stackabuse.com/get-query-strings-and-parameters-in-express-js/
-    console.log(req.originalUrl);
-    
-    wh = req.query.who // get the "who" param from GET request
-    // => gives the Id of the ESP we look for in the db	
-    wa = req.params.what // get the "what" from the GET request : temp or light ?
-    
-    console.log("\n--------------------------------");
-    console.log("A client/navigator ", req.ip);
-    console.log("sending URL ",  req.originalUrl);
-    console.log("wants to GET ", wa);
-    console.log("values from object ", wh);
-    
-    // R�cup�ration des nb derniers samples stock�s dans
-    // la collection associ�e a ce topic (wa) et a cet ESP (wh)
-    const nb = 200;
-    key = wa
-    //dbo.collection(key).find({who:wh}).toArray(function(err,result) {
-    dbo.collection(key).find({who:wh}).sort({_id:-1}).limit(nb).toArray(function(err, result) {
-	if (err) throw err;
-	console.log('get on ', key);
-	console.log(result);
-	res.json(result.reverse()); // This is the response.
-	console.log('end find');
-    });
-    console.log('end app.get');
-});
-
-//================================================================
-//==== Demarrage du serveur Web  =======================
-//================================================================
-// L'application est accessible sur le port 3000
-
-app.listen(3000, () => {
-    console.log('Server listening on port 3000');
-});

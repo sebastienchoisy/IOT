@@ -4,56 +4,57 @@
 // Auteur : G.MENEZ
 // RMQ : Manipulation naive (debutant) de Javascript
 //
-
+let infoContainer = new InfoContainer();
 
 function init() {
     new NavListeners();
+    new TempChart();
     //=== Initialisation des traces/charts de la page html ===
     // Apply time settings globally
-    Highcharts.setOptions({
-	global: { // https://stackoverflow.com/questions/13077518/highstock-chart-offsets-dates-for-no-reason
-            useUTC: false,
-            type: 'spline'
-	},
-	time: {timezone: 'Europe/Paris'}
-    });
-    // cf https://jsfiddle.net/gh/get/library/pure/highcharts/highcharts/tree/master/samples/highcharts/demo/spline-irregular-time/
-    chart1 = new Highcharts.Chart({
-        title: {text: 'Temperatures'},
-	subtitle: { text: 'Irregular time data in Highcharts JS'},
-        legend: {enabled: true},
-        credits: false,
-        chart: {renderTo: 'container1'},
-        xAxis: {title: {text: 'Heure'}, type: 'datetime'},
-        yAxis: {title: {text: 'Temperature (Deg C)'}},
-        series: [{name: 'ESP1', data: []},
-		 {name: 'ESP2', data: []},
-		 {name: 'ESP3', data: []}],
-	//colors: ['#6CF', '#39F', '#06C', '#036', '#000'],
-	colors: ['red', 'green', 'blue'],
-        plotOptions: {line: {dataLabels: {enabled: true},
-			     //color: "red",
-			     enableMouseTracking: true
-			    }
-		     }
-    });
-    chart2 = new Highcharts.Chart({
-        title: { text: 'Lights'},
-        legend: {title: {text: 'Lights'}, enabled: true},
-        credits: false,
-        chart: {renderTo: 'container2'},
-        xAxis: {title: {text: 'Heure'},type: 'datetime'},
-        yAxis: {title: {text: 'Lumen (Lum)'}},
-	series: [{name: 'ESP1', data: []},
-		 {name: 'ESP2', data: []},
-		 {name: 'ESP3', data: []}],
-	//colors: ['#6CF', '#39F', '#06C', '#036', '#000'],
-	colors: ['red', 'green', 'blue'],
-        plotOptions: {line: {dataLabels: {enabled: true},
-			     enableMouseTracking: true
-			    }
-		     }
-    });
+    // Highcharts.setOptions({
+	// global: { // https://stackoverflow.com/questions/13077518/highstock-chart-offsets-dates-for-no-reason
+    //         useUTC: false,
+    //         type: 'spline'
+	// },
+	// time: {timezone: 'Europe/Paris'}
+    // });
+    // // cf https://jsfiddle.net/gh/get/library/pure/highcharts/highcharts/tree/master/samples/highcharts/demo/spline-irregular-time/
+    // chart1 = new Highcharts.TempChart({
+    //     title: {text: 'Temperatures'},
+	// subtitle: { text: 'Irregular time data in Highcharts JS'},
+    //     legend: {enabled: true},
+    //     credits: false,
+    //     chart: {renderTo: 'container1'},
+    //     xAxis: {title: {text: 'Heure'}, type: 'datetime'},
+    //     yAxis: {title: {text: 'Temperature (Deg C)'}},
+    //     series: [{name: 'ESP1', data: []},
+	// 	 {name: 'ESP2', data: []},
+	// 	 {name: 'ESP3', data: []}],
+	// //colors: ['#6CF', '#39F', '#06C', '#036', '#000'],
+	// colors: ['red', 'green', 'blue'],
+    //     plotOptions: {line: {dataLabels: {enabled: true},
+	// 		     //color: "red",
+	// 		     enableMouseTracking: true
+	// 		    }
+	// 	     }
+    // });
+    // chart2 = new Highcharts.TempChart({
+    //     title: { text: 'Lights'},
+    //     legend: {title: {text: 'Lights'}, enabled: true},
+    //     credits: false,
+    //     chart: {renderTo: 'container2'},
+    //     xAxis: {title: {text: 'Heure'},type: 'datetime'},
+    //     yAxis: {title: {text: 'Lumen (Lum)'}},
+	// series: [{name: 'ESP1', data: []},
+	// 	 {name: 'ESP2', data: []},
+	// 	 {name: 'ESP3', data: []}],
+	// //colors: ['#6CF', '#39F', '#06C', '#036', '#000'],
+	// colors: ['red', 'green', 'blue'],
+    //     plotOptions: {line: {dataLabels: {enabled: true},
+	// 		     enableMouseTracking: true
+	// 		    }
+	// 	     }
+    // });
 
 //     //=== Gestion de la flotte d'ESP =================================
 //     var which_esps = [

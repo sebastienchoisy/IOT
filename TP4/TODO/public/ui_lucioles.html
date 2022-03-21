@@ -12,8 +12,7 @@
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
     <script src="https://code.highcharts.com/modules/export-data.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="../JS/ui_lucioles.js"></script>
-    <script src="../JS/navListeners.js"></script>
+
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,7 +33,9 @@
         <div id="map"></div>
         <div id="marker_info">
           <div id="identity">
-            <span id="name"></span>
+            <span id="name"></span><br>
+            <span id="temp"></span>
+            <div id="chart" style="max-width: 1000px; height: 350px; margin: 0 auto"></div>
           </div>
         </div>
     </div>
@@ -60,6 +61,13 @@
 <!--    <div id="container1" style="max-width: 1000px; height: 350px; margin: 0 auto"></div>-->
 <!--    <div id="container2" style="max-width: 1000px; height: 350px; margin: 0 auto"></div>    -->
 <!--    <div id="mydiv"></div>-->
-    <script src="../JS/map.js"></script>
+    <script src="JS/infoContainer.js"></script>
+    <script src="JS/marker.js"></script>
+    <script src="JS/map.js"></script>
+    <script src="JS/navListeners.js"></script>
+    <script src="JS/tempChart.js"></script>
+    <script src="JS/ui_lucioles.js"></script>
+
+
   </body> 
 </html>

@@ -1,4 +1,3 @@
-
 let map = L.map('map', {
     center: [20.0, 5.0],
     minZoom: 2,
@@ -10,10 +9,5 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     subdomains: ['a', 'b', 'c'],
 }).addTo(map)
 
-L.marker([48.8566,2.3522])
-    .bindPopup(
-        'hello'
-    )
-    .addTo(map).on("click",() => {
-        console.log("click");
-});
+new Marker("esp",2.3522,48.8566,25).addToMap();
+new Marker("MianMian se démerde",126,45,32).addToMap();

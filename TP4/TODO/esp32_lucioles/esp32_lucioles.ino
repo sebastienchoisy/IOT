@@ -98,11 +98,14 @@ StaticJsonDocument<256> jdoc;
 char jpayload[256];
 
 void createJsonTemp(){
-  jdoc["mandatory"]["temperature"]= get_temperature();
-  jdoc["mandatory"]["localisation"]["longitude"]= 2.3522;
-  jdoc["mandatory"]["localisation"]["latitude"]= 48.8566;
-  jdoc["mandatory"]["identification"] = whoami;
-  jdoc["optional"]["light"] = get_light();
+  jdoc["status"]["temperature"]= get_temperature();
+  jdoc["status"]["light"] = get_light();
+  jdoc["info"]["loc"]["longitude"]= 2.3522;
+  jdoc["info"]["loc"]["latitude"]= 48.8566;
+  jdoc["info"]["user"]= "espChoisyShan"
+  jdoc["info"]["ident"] = whoami;
+  jdoc["info"]["ip"]= WiFi.localIP().toString()
+
   serializeJson(jdoc, jpayload);
 }
 

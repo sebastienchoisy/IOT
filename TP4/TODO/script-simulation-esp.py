@@ -49,21 +49,27 @@ if __name__=="__main__":
     msg = json.dumps(payload)
     
     """
-    payloadTemp = {
-                "value": 25
-            }
+
+    payloadTemp={}
+    temperature={}
+    info={}
+    loc={}
+    #temperature["temperature"]= 25
+    payloadTemp["status"]= temperature
+    loc["longitude"]= 2.3522
+    loc["latitude"]= 48.8566
+    info["loc"]=loc
+    info["user"]= "espChoisyShan"
+    info["ident"]= "MAC"
+    info["ip"]= "192.168.0.5"
+    payloadTemp["info"]= info
+
     msgTemp = json.dumps(payloadTemp)
-    payloadLight = {
-                "value": 1800
-            }
-    msgLight = json.dumps(payloadLight)
     
     while True:
-        print("\nPublishing message {} to topic {}".format(msgLight, topicLight))
         print("\nPublishing message {} to topic {}".format(msgTemp, topicTemp))
-        client.publish(topicLight, payload=msgLight, qos=2, retain=False)
         client.publish(topicTemp, payload=msgTemp, qos=2, retain=False)
-        time.sleep(20)
+        time.sleep(10)
     
     time.sleep(100)         # wait in seconds before 
     client.loop_stop()      #------------ stop the loop and the script
