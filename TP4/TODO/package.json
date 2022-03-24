@@ -2,6 +2,7 @@
   "name": "TODO",
   "version": "1.0.0",
   "dependencies": {
+    "ajax": "0.0.4",
     "body-parser": "^1.19.2",
     "express": "^4.17.3",
     "leaflet": "^1.7.1"

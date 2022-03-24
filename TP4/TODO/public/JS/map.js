@@ -9,5 +9,3 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     subdomains: ['a', 'b', 'c'],
 }).addTo(map)
 
-new Marker("esp",2.3522,48.8566,25).addToMap();
-new Marker("MianMian se démerde",126,45,32).addToMap();

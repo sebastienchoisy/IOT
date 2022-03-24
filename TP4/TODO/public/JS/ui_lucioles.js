@@ -9,6 +9,103 @@ let infoContainer = new InfoContainer();
 function init() {
     new NavListeners();
     new TempChart();
+    let node_url = "http://localhost:3000";
+    let log_container = document.getElementById("logs_container")
+    let ident_list = [];
+    let esp_list = [];
+    let log_list = [];
+    let markers = [];
+    let new_esp;
+    setInterval(()=>{
+        checkList(); // on compare notre liste d'esps avec celle du serveur et on ajoute les idents des nouveaux
+        getLastDataForEsps(); // On récupère les dernières données pour notre liste d'esps
+        handleEspMarkers();
+        refreshLogs();
+        },1500)
+
+    function handleEspMarkers(){
+        esp_list.forEach((esp)=> {
+            if(esp.getMarker()){
+                esp.refreshDataMarker();
+            } else if(esp.haslocalisation()) {
+                esp.setUpMarker();
+            };
+        })
+    }
+    function getLastDataForEsps(){
+        esp_list.forEach((esp)=> {
+            getDataForEsp(esp);
+        })
+    }
+
+    function getDataForEsp(esp){
+        return $.ajax({
+            url: node_url.concat("/esp/temp?who="+esp.getIdent()),
+            type: 'GET',
+            headers: { Accept: "application/json", },
+            success: function (resultat, statut) {
+                esp.setData(resultat);
+                esp.extractLastData();
+            },
+            error: function (resultat, statut, erreur) {
+            },
+            complete: function (resultat, statut) {
+            }
+        });
+
+    }
+
+    function checkList(){
+        $.ajax({
+            url: node_url.concat("/esp/list"), // URL to "GET" : /esp/temp ou /esp/light
+            type: 'GET',
+            headers: { Accept: "application/json", },
+            //data: {"who": wh}, // parameter of the GET request
+            success: function (resultat, statut) { // Anonymous function on success
+                let listeData = resultat;
+                if(resultat.length){
+                    resultat.forEach((esp)=> {
+                        if(!ident_list.includes(esp.identification)){
+                            new_esp = new Esp(esp.user,esp.identification);
+                            ident_list.push(esp.identification);
+                            esp_list.push(new_esp);
+                        }
+                    })
+                }
+                //     resultat.forEach(function (element) {
+                // listeData.push([Date.parse(element.date),element.value]);
+                //     });
+                //     serie.setData(listeData); //serie.redraw();
+            },
+            error: function (resultat, statut, erreur) {
+            },
+            complete: function (resultat, statut) {
+            }
+        });
+
+    }
+
+    function refreshLogs(){
+        $.ajax({
+            url: node_url.concat("/esp/logs"),
+            type: 'GET',
+            headers: { Accept: "application/json", },
+            success: function (resultat, statut) {
+                if(resultat.length){
+                    resultat.forEach((log) => {
+                        if(!log_list.includes(JSON.stringify(log))){
+                            log_list.push(JSON.stringify(log));
+                            log_container.innerHTML += log.date+": "+log.msg+"<br>";
+                        }
+                    })
+                }
+            },
+            error: function (resultat, statut, erreur) {
+            },
+            complete: function (resultat, statut) {
+            }
+        });
+    }
     //=== Initialisation des traces/charts de la page html ===
     // Apply time settings globally
     // Highcharts.setOptions({

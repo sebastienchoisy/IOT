@@ -28,7 +28,7 @@ class TempChart {
         subtitle: { text: 'Irregular time data in Highcharts JS'},
             legend: {enabled: true},
             credits: false,
-            chart: {renderTo: 'temp'},
+            chart: {renderTo: 'chart'},
             xAxis: {title: {text: 'Heure'}, type: 'datetime'},
             yAxis: {title: {text: 'Temperature (Deg C)'}},
             series: [{name: 'ESP1', data: datalol},

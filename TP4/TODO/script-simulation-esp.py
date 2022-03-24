@@ -54,7 +54,7 @@ if __name__=="__main__":
     temperature={}
     info={}
     loc={}
-    #temperature["temperature"]= 25
+    temperature["temperature"]= 25
     payloadTemp["status"]= temperature
     loc["longitude"]= 2.3522
     loc["latitude"]= 48.8566

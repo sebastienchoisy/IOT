@@ -93,6 +93,14 @@ async function v0(){
 		}
 	    });
 
+		dbo.listCollections({name: "esp"})
+			.next(function(err, collinfo) {
+				if (collinfo) { // The collection exists
+					//console.log('Collection temp already exists');
+					dbo.collection("esp").drop()
+				}
+			});
+
 	//===============================================
 	// Connexion au broker MQTT distant
 	//
@@ -116,34 +124,38 @@ async function v0(){
 	// lesquels on s'est inscrit.
 	// => C'est cette fonction qui alimente la BD !
 	//
-	client_mqtt.on('message', function (topic, message) {
-	    console.log("\nMQTT msg on topic : ", topic.toString());
-	    console.log("Msg payload : ", message.toString());
+	client_mqtt.on('message', async function (topic, message) {
+		console.log("\nMQTT msg on topic : ", topic.toString());
+		console.log("Msg payload : ", message.toString());
 		let frTime = new Date().toLocaleString("fr-FR", {timeZone: "Europe/Paris"});
-	    // Parsing du message suppos� recu au format JSON
-	    message = JSON.parse(message.toString());
+		// Parsing du message suppos� recu au format JSON
+		message = JSON.parse(message.toString());
 
 		// Vérification du Json, si erreur on l'envoie dans la collection logs
-		if(!("info" in message && "ident" in message.info && "status" in message && "temperature" in message.status)){
+		if (!("info" in message && "ident" in message.info && "status" in message && "temperature" in message.status)) {
 			let new_error = {};
-			if("info" in message && "ident" in message.info){
+			if ("info" in message && "ident" in message.info) {
 				new_error =
-					{ date: frTime,
-						msg: "Mauvais JSON: "+message.info.ident+ " => Erreur dans le JSON",
+					{
+						date: frTime,
+						msg: "Mauvais JSON: " + message.info.ident + " => Erreur dans le JSON",
 					};
 			} else {
 				new_error =
-					{ date: frTime,
+					{
+						date: frTime,
 						msg: "Mauvais JSON: Erreur dans le JSON ( aucune identification reçue)",
 					};
 			}
-			dbo.collection("logs").insertOne(new_error, function(err, res) {
+			dbo.collection("logs").insertOne(new_error, function (err, res) {
 				if (err) throw err;
 			});
 		} else {
 			let temp = message.status.temperature;
 			let localisation = message.info.loc;
 			let wh = message.info.ident;
+			let user = message.info.user;
+			let ip = message.info.ip;
 
 			// Debug : Gerer une liste de who pour savoir qui utilise le node server
 			// let wholist = []
@@ -158,16 +170,40 @@ async function v0(){
 			// parsing qui sera realise par hightcharts dans l'UI
 			// cf https://www.w3schools.com/jsref/tryit.asp?filename=tryjsref_tolocalestring_date_all
 			// vs https://jsfiddle.net/BlackLabel/tgahn7yv
+			if (!await dbo.collection("esp").countDocuments({identification: wh})) {
+				let esp_entry = {
+					identification: wh,      // identify ESP who provide
+					ip: ip,
+					user: user
+				};
+				let new_login =
+					{
+						date: frTime,
+						msg: "Nouvelle connexion : "+ wh ,
+					};
+				dbo.collection("esp").insertOne(esp_entry, function (err, res) {
+					if (err) throw err;
+					console.log("\nItem : ", esp_entry,
+						"\ninserted in db in collection : esp");
+				});
 
+				dbo.collection("logs").insertOne(new_login,function (err, res) {
+					if (err) throw err;
+					console.log("\nItem : ", new_login,
+						"\ninserted in db in collection : logs");
+				});
+
+			}
 			//var frTime = new Date().toLocaleString("sv-SE", {timeZone: "Europe/Paris"});
 			let new_entry =
-				{ date: frTime,
+				{
+					date: frTime,
 					identification: wh,      // identify ESP who provide
 					value: temp,
 					localisation: localisation
 				};
 
-			dbo.collection("temp").insertOne(new_entry, function(err, res) {
+			dbo.collection("temp").insertOne(new_entry, function (err, res) {
 				if (err) throw err;
 				console.log("\nItem : ", new_entry,
 					"\ninserted in db in collection : temp");
@@ -195,24 +231,19 @@ async function v0(){
 			// cf https://stackabuse.com/get-query-strings-and-parameters-in-express-js/
 			console.log(req.originalUrl);
 
-			wh = req.query.who // get the "who" param from GET request
-			// => gives the Id of the ESP we look for in the db
-			wa = req.params.what // get the "what" from the GET request : temp or light ?
+			let wh = req.query.who // get the "who" param from GET request
 
 			console.log("\n--------------------------------");
 			console.log("A client/navigator ", req.ip);
 			console.log("sending URL ",  req.originalUrl);
-			console.log("wants to GET ", wa);
 			console.log("values from object ", wh);
 
 			// R�cup�ration des nb derniers samples stock�s dans
 			// la collection associ�e a ce topic (wa) et a cet ESP (wh)
 			const nb = 200;
-			key = wa
 			//dbo.collection(key).find({who:wh}).toArray(function(err,result) {
-			dbo.collection(key).find({identification:wh}).sort({_id:-1}).limit(nb).toArray(function(err, result) {
+			dbo.collection("temp").find({identification:wh}).sort({_id:-1}).limit(nb).toArray(function(err, result) {
 				if (err) throw err;
-				console.log('get on ', key);
 				console.log(result);
 				res.json(result.reverse()); // This is the response.
 				console.log('end find');
@@ -220,13 +251,17 @@ async function v0(){
 			console.log('end app.get');
 		});
 
+
+		//path qui retourne la liste des esp avec leur identification et leur user
 		app.get('/esp/list', function (req, res) {
 
-			//dbo.collection(key).find({who:wh}).toArray(function(err,result) {
-			dbo.collection("temp").distinct("identification").then((list)=> res.send(list));
+			dbo.collection("esp").find().toArray(function(err, result) {
+				if (err) throw err;
+				res.json(result);
+			});
 
 		});
-
+		//path qui retourne la liste des logs
 		app.get('/esp/logs', function (req, res) {
 
 			//dbo.collection(key).find({who:wh}).toArray(function(err,result) {
