@@ -1,0 +1,31 @@
+[   {
+        "long": 139.7744,
+        "lat": 35.6839,
+        "city": "Tokyo",
+        "country": "JP"
+    },
+    {
+        "long": 77.2167,
+        "lat": 28.6667,
+        "city": "Delhi",
+        "country": "IN"
+    },
+    {
+        "long": 121.4667,
+        "lat": 31.1667,
+        "city": "Shanghai",
+        "country": "CN"
+    },
+    {
+        "long": 37.6178,
+        "lat": 55.7558,
+        "city": "Moscou",
+        "country": "RU"
+    },
+    {
+        "long": -46.6339,
+        "lat": -23.5504,
+        "city": "Sao Paulo",
+        "country": "BR"
+    }
+]

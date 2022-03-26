@@ -5,6 +5,7 @@
 // RMQ : Manipulation naive (debutant) de Javascript
 //
 let infoContainer = new InfoContainer();
+let chart = new TempChart();
 
 function init() {
     new NavListeners();
@@ -14,23 +15,55 @@ function init() {
     let ident_list = [];
     let esp_list = [];
     let log_list = [];
-    let markers = [];
     let new_esp;
-    setInterval(()=>{
+    let api_sources_list = [];
+
+
+    getApiSourcesFromNode();
+    //
+    setInterval(() => {
+        refreshLogs();
+        waitingGif();
+        getApiDataFromNode()
         checkList(); // on compare notre liste d'esps avec celle du serveur et on ajoute les idents des nouveaux
         getLastDataForEsps(); // On récupère les dernières données pour notre liste d'esps
-        handleEspMarkers();
-        refreshLogs();
-        },1500)
+        handleMarkers();
+        waitingGif();
+        },2000)
 
-    function handleEspMarkers(){
-        esp_list.forEach((esp)=> {
-            if(esp.getMarker()){
-                esp.refreshDataMarker();
-            } else if(esp.haslocalisation()) {
-                esp.setUpMarker();
+    // setInterval(()=>{
+    //     checkList(); // on compare notre liste d'esps avec celle du serveur et on ajoute les idents des nouveaux
+    //     getLastDataForEsps();
+    //     getApiDataFromNode()// On récupère les dernières données pour notre liste d'esps
+    //     handleMarkers();
+    //     },60000)
+
+    function handleMarkers(){
+        let liste = esp_list.concat(api_sources_list);
+        liste.forEach((source)=> {
+            if(source.getMarker()){
+                source.refreshDataMarker();
+            } else if(source.haslocalisation()) {
+                source.setUpMarker();
+                if(!(source.getCity() && source.getCountry()))
+                source.getLocationName();
             };
         })
+    }
+
+    function waitingGif() {
+        let isLoading = false;
+        if (esp_list.length > 0) {
+            esp_list.forEach((esp) => {
+                if (!(!!esp.getMarker())) {
+                    isLoading = true;
+                }
+            })
+            if (!isLoading) {
+                document.getElementById("loading-screen").classList.add("hidden");
+            }
+        }
+
     }
     function getLastDataForEsps(){
         esp_list.forEach((esp)=> {
@@ -39,11 +72,12 @@ function init() {
     }
 
     function getDataForEsp(esp){
-        return $.ajax({
+        $.ajax({
             url: node_url.concat("/esp/temp?who="+esp.getIdent()),
             type: 'GET',
             headers: { Accept: "application/json", },
             success: function (resultat, statut) {
+                //console.log(resultat.map((test) => ({"date":new Date().getTime(),"value": test.value})));
                 esp.setData(resultat);
                 esp.extractLastData();
             },
@@ -66,7 +100,7 @@ function init() {
                 if(resultat.length){
                     resultat.forEach((esp)=> {
                         if(!ident_list.includes(esp.identification)){
-                            new_esp = new Esp(esp.user,esp.identification);
+                            new_esp = new dataSource(esp.user,esp.identification,"esp");
                             ident_list.push(esp.identification);
                             esp_list.push(new_esp);
                         }
@@ -105,6 +139,46 @@ function init() {
             complete: function (resultat, statut) {
             }
         });
+    }
+
+    function getApiSourcesFromNode(){
+        $.ajax({
+            url: node_url.concat("/api/locations"),
+            type: 'GET',
+            headers: { Accept: "application/json", },
+            success: function (resultat, statut) {
+                resultat.forEach((source)=> {
+                    let newSource = new dataSource(source.city,null,"api");
+                    newSource.setLat(source.lat);
+                    newSource.setLong(source.long);
+                    newSource.setCountry(source.country);
+                    newSource.setCity(source.city);
+                    api_sources_list.push(newSource);
+                })
+            },
+            error: function (resultat, statut, erreur) {
+            },
+            complete: function (resultat, statut) {
+            }
+        });
+    }
+
+    function getApiDataFromNode(){
+        api_sources_list.forEach((source) => {
+            $.ajax({
+                url: node_url.concat("/api/temp?city="+source.getCity()),
+                type: 'GET',
+                headers: { Accept: "application/json", },
+                success: function (resultat, statut) {
+                    source.setData(resultat);
+                    source.extractLastData();
+                },
+                error: function (resultat, statut, erreur) {
+                },
+                complete: function (resultat, statut) {
+                }
+            });
+        })
     }
     //=== Initialisation des traces/charts de la page html ===
     // Apply time settings globally

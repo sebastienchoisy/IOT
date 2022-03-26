@@ -5,6 +5,7 @@
 import paho.mqtt.client as mqtt
 import time
 import json
+import random
 
 #--------------------------------------------------
 
@@ -50,26 +51,27 @@ if __name__=="__main__":
     
     """
 
-    payloadTemp={}
-    temperature={}
-    info={}
-    loc={}
-    temperature["temperature"]= 25
-    payloadTemp["status"]= temperature
-    loc["longitude"]= 2.3522
-    loc["latitude"]= 48.8566
-    info["loc"]=loc
-    info["user"]= "espChoisyShan"
-    info["ident"]= "MAC"
-    info["ip"]= "192.168.0.5"
-    payloadTemp["info"]= info
 
-    msgTemp = json.dumps(payloadTemp)
     
     while True:
-        print("\nPublishing message {} to topic {}".format(msgTemp, topicTemp))
-        client.publish(topicTemp, payload=msgTemp, qos=2, retain=False)
-        time.sleep(10)
+       payloadTemp={}
+       temperature={}
+       info={}
+       loc={}
+       temperature["temperature"]= random.randint(12,30)
+       payloadTemp["status"]= temperature
+       loc["longitude"]= 2.3522
+       loc["latitude"]= 48.8566
+       info["loc"]=loc
+       info["user"]= "espChoisyShan"
+       info["ident"]= "MAC"
+       info["ip"]= "192.168.0.5"
+       payloadTemp["info"]= info
+
+       msgTemp = json.dumps(payloadTemp)
+       print("\nPublishing message {} to topic {}".format(msgTemp, topicTemp))
+       client.publish(topicTemp, payload=msgTemp, qos=2, retain=False)
+       time.sleep(60)
     
     time.sleep(100)         # wait in seconds before 
     client.loop_stop()      #------------ stop the loop and the script

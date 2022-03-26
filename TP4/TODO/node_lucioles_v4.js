@@ -7,6 +7,7 @@ const path = require('path');
 // Utilisation du framework express
 // Notamment g�r�r les routes
 const express = require('express');
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 // et pour permettre de parcourir les body des requetes
 const bodyParser = require('body-parser');
 
@@ -50,11 +51,14 @@ async function listDatabases(client){
     databasesList.databases.forEach(db => console.log(` - ${db.name}`));
 }
 
+
+
 //----------------------------------------------------------------
 // asynchronous function named main() where we will connect to our
 // MongoDB cluster, call functions that query our database, and
 // disconnect from our cluster.
 async function v0(){
+
     const mongoName = "lucioles"                   //Nom de la base
     //const mongoUri = 'mongodb://localhost:27017/'; //URL de connection
     //const mongoUri = 'mongodb://10.9.128.189:27017/'; //URL de connection		
@@ -76,31 +80,62 @@ async function v0(){
 	// Get a connection to the DB "lucioles" or create
 		let dbo = mg_client.db(mongoName);
 
-	// Remove "old collections : temp and light
-	dbo.listCollections({name: "temp"})
-	    .next(function(err, collinfo) {
-		if (collinfo) { // The collection exists
-		    //console.log('Collection temp already exists');
-		    dbo.collection("temp").drop() 
-		}
-	    });
+	// // Remove "old collections : temp and light
+	// dbo.listCollections({name: "temp"})
+	//     .next(function(err, collinfo) {
+	// 	if (collinfo) { // The collection exists
+	// 	    //console.log('Collection temp already exists');
+	// 	    dbo.collection("temp").drop()
+	// 	}
+	//     });
+	//
+	// 	dbo.listCollections({name: "logs"})
+	// 		.next(function (err, collinfo) {
+	// 			if (collinfo) { // The collection exists
+	// 				//console.log('Collection temp already exists');s
+	// 				dbo.collection("logs").drop()
+	// 			}
+	// 		});
+	//
+	// 	dbo.listCollections({name: "api"})
+	// 		.next(function (err, collinfo) {
+	// 			if (collinfo) { // The collection exists
+	// 				//console.log('Collection temp already exists');
+	// 				dbo.collection("api").drop()
+	// 			}
+	// 		});
+	//
+	// 	dbo.listCollections({name: "esp"})
+	// 		.next(function(err, collinfo) {
+	// 			if (collinfo) { // The collection exists
+	// 				//console.log('Collection temp already exists');
+	// 				dbo.collection("esp").drop()
+	// 			}
+	// 		});
+	// On rempli notre collection API avec les données de l'api OpenWeather
+		let data = require("./public/assets/api-locations.json");
+		async function getDataFromAPI(lat,long){
+				let apikey = "627f9c3847a139f3ed2aaf91fe4db14a";
+				let url = "https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+long+"&exclude=hourly,daily&units=metric&appid="+apikey;
+				return await fetch(url).then((response) => response.json());
+			}
 
-	dbo.listCollections({name: "logs"})
-	    .next(function(err, collinfo) {
-		if (collinfo) { // The collection exists
-		    //console.log('Collection temp already exists');
-		    dbo.collection("logs").drop()
-		}
-	    });
-
-		dbo.listCollections({name: "esp"})
-			.next(function(err, collinfo) {
-				if (collinfo) { // The collection exists
-					//console.log('Collection temp already exists');
-					dbo.collection("esp").drop()
-				}
+		setInterval(()=>{
+			data.forEach((source) => {
+				let data;
+				getDataFromAPI(source.lat,source.long).then((res) => {
+					data = res;
+					let api_entry = {
+						date: data.current.dt,
+						city: source.city,
+						value: data.current.temp
+					}
+					dbo.collection("api").insertOne(api_entry, function (err, res) {
+						if (err) throw err;
+					});
+				});
 			});
-
+		},300000)
 	//===============================================
 	// Connexion au broker MQTT distant
 	//
@@ -127,7 +162,7 @@ async function v0(){
 	client_mqtt.on('message', async function (topic, message) {
 		console.log("\nMQTT msg on topic : ", topic.toString());
 		console.log("Msg payload : ", message.toString());
-		let frTime = new Date().toLocaleString("fr-FR", {timeZone: "Europe/Paris"});
+		let frTime = new Date();
 		// Parsing du message suppos� recu au format JSON
 		message = JSON.parse(message.toString());
 
@@ -178,7 +213,7 @@ async function v0(){
 				};
 				let new_login =
 					{
-						date: frTime,
+						date: frTime.toLocaleString(),
 						msg: "Nouvelle connexion : "+ wh ,
 					};
 				dbo.collection("esp").insertOne(esp_entry, function (err, res) {
@@ -210,6 +245,8 @@ async function v0(){
 			});
 		}
 	})
+		// On récupére les données de l'API pour remplir notre base
+
 
 		//================================================================
 // Answering GET request on this node ... probably from navigator.
@@ -244,11 +281,8 @@ async function v0(){
 			//dbo.collection(key).find({who:wh}).toArray(function(err,result) {
 			dbo.collection("temp").find({identification:wh}).sort({_id:-1}).limit(nb).toArray(function(err, result) {
 				if (err) throw err;
-				console.log(result);
 				res.json(result.reverse()); // This is the response.
-				console.log('end find');
 			});
-			console.log('end app.get');
 		});
 
 
@@ -268,6 +302,17 @@ async function v0(){
 			dbo.collection("logs").find().toArray(function(err, result) {
 				if (err) throw err;
 				res.json(result); // This is the response.
+			});
+		});
+		app.get('/api/locations',function(req,res){
+			let data = require("./public/assets/api-locations.json");
+			res.json(data);
+		});
+		app.get('/api/temp',async function(req,res){
+			let city = req.query.city;
+			dbo.collection("api").find({city:city}).limit(200).toArray(function(err, result) {
+				if (err) throw err;
+				res.json(result.reverse()); // This is the response.
 			});
 		});
 

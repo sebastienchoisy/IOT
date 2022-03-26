@@ -1,3 +1,9 @@
+body{
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
+}
 #header {
     width: 700px;
     font-family: 'Patrick Hand SC';
@@ -59,7 +65,23 @@
 #map {
     margin-bottom: 4%;
     border-radius: 2%;
-    margin-top: 10px;
+    position: absolute;
+    z-index: 0;
+}
+#loading-screen {
+    background-color: dimgrey;
+    display: flex;
+    position: absolute;
+    font-family: "Patrick Hand SC";
+    font-size: 70px;
+    border-radius: 2%;
+    width: 100%;
+    height: 100%;
+    opacity: 0.9;
+    z-index: 9;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .hidden {
@@ -84,4 +106,34 @@
     width: 100%;
     height: 800px;
 }
+
+.info-display {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    margin: 10px 0 15px 0;
+}
+
+.w-25 {
+    width: 25%;
+    font-family:'Patrick Hand SC';
+}
+#map_display {
+    position:relative;
+    width: 700px;
+    height: 450px;
+    margin-top:10px;
+}
+.leaflet-container a.leaflet-popup-close-button {
+    display: none;
+}
+.leaflet-popup-tip-container {
+    display: none;
+}
+.leaflet-popup-content-wrapper, .leaflet-popup-tip {
+    font-family: "Patrick Hand SC";
+    background-color: #a33208;
+    color: white;
+}
+
 
