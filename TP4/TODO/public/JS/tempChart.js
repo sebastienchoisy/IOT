@@ -30,7 +30,7 @@ class TempChart {
         this.chart = new Highcharts.chart('chart',{
             legend: {enabled: true},
             credits: false,
-            xAxis: {title: {text: 'Heure'}, type: 'datetime'},
+            xAxis: {title: {text: 'Heure locale'}, type: 'datetime'},
             yAxis: {title: {text: 'Temperature (Deg C)'}},
             series: [{name: name, data: formattedData}],
         colors: ['blue'],

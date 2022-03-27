@@ -29,28 +29,39 @@
       <button type="button" id="logs_button" class="n-button"> Logs</button>
     </div>
     <div id="container">
-    <div id="map_container">
-      <div id="map_display">
-        <div id="map"></div>
-        <div id="loading-screen"><img src="assets/gif-spinner.svg" alt=""><span>Chargement</span></div>
-      </div>
-        <div id="marker_info" class="hidden">
-          <div id="identity">
-            <div class="info-display">
-              <div class="w-25"><span>Nom: </span><span id="name"></span></div>
-              <div class="w-25"><span>Adresse MAC: </span><span id="ident"></span></div>
-              <div class="w-25"><span>Localisation: </span><span id="loc"></span></div>
-            </div>
-            <div class="info-display">
-              <div class="w-25"><span>Dernière temperature: </span><span id="temp"></span></div>
-              <div class="w-25"><span>Plus haute temperature: </span><span id="h-temp"></span></div>
-              <div class="w-25"><span>Plus basse temperature: </span><span id="l-temp"></span></div>
-            </div>
-            <div class="info-display"></div>
-          </div>
-          <div id="chart" class="hidde" style="max-width: 1000px; height: 350px; margin: 0 auto"></div>
+      <div id="map_container">
+        <div id="map_display">
+          <div id="map"></div>
+          <div id="loading-screen"><img src="assets/gif-spinner.svg" alt=""><span>Chargement des données</span></div>
         </div>
-    </div>
+        <div id="marker_info" class="hidden">
+          <div id="container_info">
+            <div id="identity">
+              <div class="info-display">
+                <div class="w-25"><span>Nom: </span><span id="name"></span></div>
+                <div class="w-25"><span>Adresse MAC: </span><span id="ident"></span></div>
+                <div class="w-25"><span>Localisation: </span><span id="loc"></span></div>
+              </div>
+              <div class="info-display">
+                <div class="w-25"><span>Dernière temperature: </span><span id="temp"></span></div>
+                <div class="w-25"><span>Plus haute temperature: </span><span id="h-temp"></span></div>
+                <div class="w-25"><span>Plus basse temperature: </span><span id="l-temp"></span></div>
+              </div>
+              <div class="info-display"></div>
+            </div>
+            <div id="pred" class="hidden">
+              <div class="predDay"></div>
+              <div class="predDay"></div>
+              <div class="predDay"></div>
+              <div class="predDay"></div>
+              <div class="predDay"></div>
+              <div class="predDay"></div>
+              <div class="predDay"></div>
+            </div>
+          </div>
+          <div id="chart" style="max-width: 1000px; height: 350px; margin: 0 auto"></div>
+        </div>
+      </div>
     <div id="documentation_container">
       <h1>Documentation</h1>
       <h3>Inscription</h3>

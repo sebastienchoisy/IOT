@@ -22,14 +22,6 @@ class InfoContainer {
         document.getElementById("h-temp").innerHTML = this.getRecordTemp()[1]+ "°C";
         document.getElementById("l-temp").innerHTML = this.getRecordTemp()[0]+ "°C";
     }
-    setTemp(temp){
-        this.temp = temp;
-        document.getElementById("temp").innerHTML = "Temp: "+this.temp;
-    }
-
-    getChart(){
-        return this.chart;
-    }
 
     getRecordTemp(){
         let records = [];
@@ -47,5 +39,22 @@ class InfoContainer {
             },2000)
         }
 
+    }
+
+    setPredict(){
+        if(this.dataSource.getType() == "api"){
+            let predictDiv = document.getElementsByClassName("predDay");
+            for(let i = 0;i < predictDiv.length;i++){
+                predictDiv[i].innerHTML =
+                    "<span style='font-size: 20px;font-weight: bold'>"+new Intl.DateTimeFormat('fr-FR', {weekday:"long"}).format(this.dataSource.getPred()[i].dt) +"</span>" +
+                    "<span>"+new Date(this.dataSource.getPred()[i].dt).toLocaleDateString("fr-FR") +"</span>"+
+                    "<span> Day: "+this.dataSource.getPred()[i].temp.day+" °C</span>" +
+                    "<span> min: "+this.dataSource.getPred()[i].temp.min+" °C</span>" +
+                    "<span> max: "+this.dataSource.getPred()[i].temp.max+" °C</span>"
+            }
+            document.getElementById("pred").classList.remove("hidden");
+        } else {
+            document.getElementById("pred").classList.add("hidden");
+        }
     }
 }

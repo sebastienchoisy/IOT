@@ -12,6 +12,7 @@ class dataSource {
         this.lastTemp = '';
         this.marker = undefined;
         this.data = [];
+        this.pred = [];
     }
     getName(){
         return this.name;
@@ -52,6 +53,12 @@ class dataSource {
     setCity(city){
         this.city = city;
     }
+    setPred(pred){
+        this.pred = pred;
+    }
+    getPred(){
+        return this.pred;
+    }
     haslocalisation(){
         return !!(this.lastLongitude && this.lastLatitude);
     }
@@ -70,16 +77,19 @@ class dataSource {
         this.marker.on("click",() => {
             infoContainer.setDataSource(this);
             infoContainer.setInfo();
+            infoContainer.setPredict();
             document.getElementById("marker_info").classList.remove("hidden");
         })
     }
 
     extractLastData(){
         let lastData = this.data[this.data.length-1];
-        this.lastTemp = lastData.value;
-        if(this.type == "esp") {
-            this.lastLatitude = lastData.localisation.latitude;
-            this.lastLongitude = lastData.localisation.longitude;
+        if(lastData) {
+            this.lastTemp = lastData.value;
+            if (this.type == "esp") {
+                this.lastLatitude = lastData.localisation.latitude;
+                this.lastLongitude = lastData.localisation.longitude;
+            }
         }
 
     }
@@ -91,7 +101,7 @@ class dataSource {
     }
 
     getLocationName(){
-        //let apikey = "caba220665794103af12e0a53e775bb8";
+        let apikey = "caba220665794103af12e0a53e775bb8";
         $.ajax({
             url: "https://api.bigdatacloud.net/data/reverse-geocode?latitude="+this.lastLatitude+"&longitude="+this.lastLongitude+"&localityLanguage=fr&key="+apikey,
             type: 'GET',

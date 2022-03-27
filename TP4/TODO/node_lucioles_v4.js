@@ -1,4 +1,4 @@
-// Importation des modules
+
 const path = require('path');
 
 // var, const, let :
@@ -97,13 +97,13 @@ async function v0(){
 	// 			}
 	// 		});
 	//
-	// 	dbo.listCollections({name: "api"})
-	// 		.next(function (err, collinfo) {
-	// 			if (collinfo) { // The collection exists
-	// 				//console.log('Collection temp already exists');
-	// 				dbo.collection("api").drop()
-	// 			}
-	// 		});
+		dbo.listCollections({name: "api"})
+			.next(function (err, collinfo) {
+				if (collinfo) { // The collection exists
+					//console.log('Collection temp already exists');
+					dbo.collection("api").drop()
+				}
+			});
 	//
 	// 	dbo.listCollections({name: "esp"})
 	// 		.next(function(err, collinfo) {
@@ -114,28 +114,44 @@ async function v0(){
 	// 		});
 	// On rempli notre collection API avec les données de l'api OpenWeather
 		let data = require("./public/assets/api-locations.json");
-		async function getDataFromAPI(lat,long){
-				let apikey = "627f9c3847a139f3ed2aaf91fe4db14a";
-				let url = "https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+long+"&exclude=hourly,daily&units=metric&appid="+apikey;
-				return await fetch(url).then((response) => response.json());
-			}
+		let apikey = "31d8779b48d2fbbe7e1e2183ea13041a";
+		async function getCurrentDataFromAPI(lat,long){
+			let url = "https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+long+"&exclude=hourly,daily,minutely,alerts&units=metric&appid="+apikey;
+			return await fetch(url).then((response) => response.json());
+		}
+		async function getPredictDataFromAPI(lat,long){
+			let url = "https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+long+"&exclude=hourly,current,minutely,alerts&units=metric&appid="+apikey;
+			return await fetch(url).then((response) => response.json());
+		}
 
-		setInterval(()=>{
+		setInterval(() => {
 			data.forEach((source) => {
-				let data;
-				getDataFromAPI(source.lat,source.long).then((res) => {
-					data = res;
-					let api_entry = {
-						date: data.current.dt,
+				let predData;
+				getPredictDataFromAPI(source.lat,source.long).then((res) => {
+					predData = res;
+					let pred_entry = {
 						city: source.city,
-						value: data.current.temp
+						pred: predData.daily
+					}
+					dbo.collection("api-pred").insertOne(pred_entry, function (err, res) {
+						if (err) throw err;
+					});
+				})
+				let apiData;
+				getCurrentDataFromAPI(source.lat,source.long).then((res) => {
+					apiData = res;
+					let api_entry = {
+						date: apiData.current.dt*1000 + apiData.timezone_offset*1000 -7200000,
+						city: source.city,
+						value: apiData.current.temp
 					}
 					dbo.collection("api").insertOne(api_entry, function (err, res) {
 						if (err) throw err;
 					});
 				});
-			});
-		},300000)
+			})
+		},3000000)
+
 	//===============================================
 	// Connexion au broker MQTT distant
 	//
@@ -313,6 +329,13 @@ async function v0(){
 			dbo.collection("api").find({city:city}).limit(200).toArray(function(err, result) {
 				if (err) throw err;
 				res.json(result.reverse()); // This is the response.
+			});
+		});
+		app.get('/api/predict',async function(req,res){
+			let city = req.query.city;
+			dbo.collection("api-pred").find({city:city}).limit(1).toArray(function(err, result) {
+				if (err) throw err;
+				res.json(result); // This is the response.
 			});
 		});
 
