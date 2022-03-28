@@ -11,12 +11,6 @@
         "country": "IN"
     },
     {
-        "long": 121.4667,
-        "lat": 31.1667,
-        "city": "Shanghai",
-        "country": "CN"
-    },
-    {
         "long": 37.6178,
         "lat": 55.7558,
         "city": "Moscou",
@@ -27,5 +21,41 @@
         "lat": -23.5504,
         "city": "Sao Paulo",
         "country": "BR"
+    },
+    {
+        "long": -0.1275,
+        "lat": 51.5072,
+        "city": "Londres",
+        "country": "GB"
+    },
+    {
+        "long": -73.9249,
+        "lat": 40.6943,
+        "city": "New York",
+        "country": "US"
+    },
+    {
+        "long": 120.6561,
+        "lat": 27.9991,
+        "city": "Wenzhou",
+        "country": "CN"
+    },
+    {
+        "long": 100.5167,
+        "lat": 13.75,
+        "city": "Bangkok",
+        "country": "TH"
+    },
+    {
+        "long": -58.3819,
+        "lat": -34.5997,
+        "city": "Buenos Aires",
+        "country": "AR"
+    },
+    {
+        "long": 30.5236,
+        "lat": 50.45,
+        "city": "Kyiv",
+        "country": "UA"
     }
 ]

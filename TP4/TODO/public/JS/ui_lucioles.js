@@ -6,38 +6,51 @@
 //
 let infoContainer = new InfoContainer();
 let chart = new TempChart();
+let HOST = location.origin.replace(/^http/, 'ws')
+let ws = new WebSocket(HOST);
 
 function init() {
     new NavListeners();
-    new TempChart();
     let node_url = "http://localhost:3000";
-    let log_container = document.getElementById("logs_container")
     let ident_list = [];
     let esp_list = [];
     let log_list = [];
-    let new_esp;
     let api_sources_list = [];
 
-
     getApiSourcesFromNode();
-    //
-    setInterval(() => {
-        refreshLogs();
-        waitingGif();
-        getApiDataFromNode();
+    checkList()
+
+    setTimeout(()=>{
         getApiSourcePred();
-        checkList(); // on compare notre liste d'esps avec celle du serveur et on ajoute les idents des nouveaux
-        getLastDataForEsps(); // On récupère les dernières données pour notre liste d'esps
+        getApiDataFromNode()
+        getLastDataForEsps();
+        handleMarkers()
+    },3000)
+
+    setInterval(() => {
         handleMarkers();
         waitingGif();
         },2000)
 
-    // setInterval(()=>{
-    //     checkList(); // on compare notre liste d'esps avec celle du serveur et on ajoute les idents des nouveaux
-    //     getLastDataForEsps();
-    //     getApiDataFromNode()// On récupère les dernières données pour notre liste d'esps
-    //     handleMarkers();
-    //     },60000)
+
+    ws.onmessage = function (event) {
+        let msg = JSON.parse(event.data);
+        switch (msg.type){
+            case "refresh_temp":
+                getLastDataForEsps();
+                break;
+            case "refresh_logs":
+                refreshLogs();
+                break;
+            case "refresh_esp_list":
+                checkList().then(getLastDataForEsps()); // on compare notre liste d'esps avec celle du serveur et on ajoute les idents des nouveaux
+                break;
+            case "refresh_api":
+                getApiDataFromNode();
+                getApiSourcePred();
+                break;
+        }
+    };
 
     function handleMarkers(){
         let liste = esp_list.concat(api_sources_list);
@@ -48,29 +61,28 @@ function init() {
                 source.setUpMarker();
                 if(!(source.getCity() && source.getCountry()))
                 source.getLocationName();
+                source.setUpMarker();
             };
         })
     }
 
-    function waitingGif() {
-        let isLoading = false;
-        let liste = esp_list.concat(api_sources_list);
-        if (liste.length > 0) {
-            liste.forEach((esp) => {
-                if (!(!!esp.getMarker())) {
-                    isLoading = true;
-                }
-            })
-            if (!isLoading) {
-                document.getElementById("loading-screen").classList.add("hidden");
-            }
-        }
-
-    }
     function getLastDataForEsps(){
         esp_list.forEach((esp)=> {
             getDataForEsp(esp);
         })
+    }
+
+    function waitingGif() {
+        let liste = api_sources_list;
+        let markerLoaded = 0;
+        liste.forEach((source) => {
+            if (!!source.getMarker()) {
+                markerLoaded++;
+            }
+        });
+        if(markerLoaded == api_sources_list.length){
+            document.getElementById("loading-screen").classList.add("hidden");
+        }
     }
 
     function getDataForEsp(esp){
@@ -91,25 +103,22 @@ function init() {
     }
 
     function checkList(){
-        $.ajax({
+        let new_esp;
+        return $.ajax({
             url: node_url.concat("/esp/list"), // URL to "GET" : /esp/temp ou /esp/light
             type: 'GET',
             headers: { Accept: "application/json", },
-            //data: {"who": wh}, // parameter of the GET request
             success: function (resultat, statut) { // Anonymous function on success
-                if(resultat.length){
+                if(resultat.length > 0){
                     resultat.forEach((esp)=> {
                         if(!ident_list.includes(esp.identification)){
                             new_esp = new dataSource(esp.user,esp.identification,"esp");
                             ident_list.push(esp.identification);
                             esp_list.push(new_esp);
+                            getLastDataForEsps();
                         }
                     })
                 }
-                //     resultat.forEach(function (element) {
-                // listeData.push([Date.parse(element.date),element.value]);
-                //     });
-                //     serie.setData(listeData); //serie.redraw();
             },
             error: function (resultat, statut, erreur) {
             },
@@ -120,7 +129,6 @@ function init() {
     }
 
     function getApiSourcePred() {
-
         api_sources_list.forEach((source) => {
             $.ajax({
                 url: node_url.concat("/api/predict?city=" + source.getCity()),
@@ -144,6 +152,7 @@ function init() {
     }
 
     function refreshLogs(){
+        let log_container = document.getElementById("logs_container")
         $.ajax({
             url: node_url.concat("/esp/logs"),
             type: 'GET',
